@@ -72,23 +72,29 @@ namespace ScrSh {
 			wr.WriteLine("        all-monitors");
 			wr.WriteLine("        monitor,NUM");
 			wr.WriteLine("        X,Y,WIDTH,HEIGHT");
-			wr.WriteLine("    If region is empty, no screenshot will be taken and program with exit 1.");
+			wr.WriteLine("    If region is empty, no screenshot will be taken and program will");
+			wr.WriteLine("    exit with status code 1.");
+			wr.WriteLine();
+			wr.WriteLine(" -s, --shift X1,Y1,X2,Y2");
+			wr.WriteLine("    Shifts region coordinates by X1,Y1 and X2,Y2 values.");
+			wr.WriteLine("    Shift is applied only after computing region coordinates, but");
+			wr.WriteLine("    before showing GUI.");
 			wr.WriteLine();
 			wr.WriteLine(" -f, --format FMT");
 			wr.WriteLine("    Save screenshot in specified format. FMT can be jpg or png.");
 			wr.WriteLine("    Compression for jpg can be set using FMT=jpg:NUM syntax.");
 			wr.WriteLine();
-			wr.WriteLine(" -g, --gui");
+			wr.WriteLine(" -g, --gui, --force-gui");
 			wr.WriteLine("    Force gui window to appear, even if region was specified.");
 			wr.WriteLine();
-			wr.WriteLine(" --save-dialog");
+			wr.WriteLine(" --save-dialog, --force-save-dialog");
 			wr.WriteLine("    Force save dialog to appear, even if path was specified.");
 			wr.WriteLine();
 			wr.WriteLine(" -h, --help");
-			wr.WriteLine("    Display help and exit");
+			wr.WriteLine("    Display help and exit.");
 			wr.WriteLine();
 			wr.WriteLine(" -v, --version");
-			wr.WriteLine("    Print version information and exit");
+			wr.WriteLine("    Print version information and exit.");
 		}
 
 
@@ -96,6 +102,7 @@ namespace ScrSh {
 		private static void Main(string[] _args) {
 			Match match;
 			Region region = null;
+			Region shift = null;
 
 			bool createGUI = false;
 			bool createSaveDialog = false;
@@ -113,16 +120,19 @@ namespace ScrSh {
 							Program.printUsage(Console.Out);
 							Environment.Exit(0);
 							break;
+
 						case "-v":
 						case "--version":
 							Console.Out.WriteLine("2013-02-18");
 							Environment.Exit(0);
 							break;
+
 						case "-f":
 						case "--format":
 							i ++;
 							format = args[i].ToLower();
 							break;
+
 						case "-p":
 						case "--path":
 							i ++;
@@ -134,21 +144,23 @@ namespace ScrSh {
 								return;
 							}
 							break;
+
 						case "--save-dialog":
 						case "--force-save-dialog":
 							createSaveDialog = true;
 							break;
+
 						case "-g":
 						case "--gui":
 						case "--force-gui":
 							createGUI = true;
 							break;
+
 						case "-r":
 						case "--region":
 							i ++;
-							String regionString = args[i].ToLower();
-
-							if (regionString == "all-monitors") {
+							arg = args[i].ToLower();
+							if (arg == "all-monitors") {
 								region = new Region(Screen.PrimaryScreen.Bounds);
 								foreach (Screen screen in Screen.AllScreens) {
 									region.Left = Math.Min(region.Left, screen.Bounds.Left);
@@ -156,9 +168,9 @@ namespace ScrSh {
 									region.Right = Math.Max(region.Right, screen.Bounds.Right);
 									region.Bottom = Math.Max(region.Bottom, screen.Bounds.Bottom);
 								}
-							} else if (regionString == "primary-monitor") {
+							} else if (arg == "primary-monitor") {
 								region = new Region(Screen.PrimaryScreen.Bounds);
-							} else if (regionString == "active-monitor") {
+							} else if (arg == "active-monitor") {
 								foreach (Screen screen in Screen.AllScreens) {
 									if (screen.Bounds.Contains(Cursor.Position)) {
 										region = new Region(screen.Bounds);
@@ -169,12 +181,12 @@ namespace ScrSh {
 									Environment.Exit(EXIT_FAILURE);
 									return;
 								}
-							} else if (regionString == "active-window") {
+							} else if (arg == "active-window") {
 								IntPtr handle = GetForegroundWindow();
 								RECT rect;
 								GetWindowRect(handle, out rect);
 								region = new Region(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
-							} else if ((match = new Regex("^monitor[-,](\\d+)$").Match(regionString)).Success) {
+							} else if ((match = new Regex("^monitor[-,](\\d+)$").Match(arg)).Success) {
 								int monitorNum = Convert.ToInt32(match.Groups[1].Value);
 								try {
 									region = new Region(Screen.AllScreens[monitorNum - 1].Bounds);
@@ -183,14 +195,27 @@ namespace ScrSh {
 									Environment.Exit(EXIT_FAILURE);
 									return;
 								}
-							} else if ((match = new Regex("^(-?\\d+)[:,](-?\\d+)[x;,](\\d+)[:,](\\d+)$").Match(regionString)).Success) {
+							} else if ((match = new Regex("^(-?\\d+)[:,](-?\\d+)[x;,](\\d+)[:,](\\d+)$").Match(arg)).Success) {
 								int x = Convert.ToInt32(match.Groups[1].Value);
 								int y = Convert.ToInt32(match.Groups[2].Value);
 								int w = Convert.ToInt32(match.Groups[3].Value);
 								int h = Convert.ToInt32(match.Groups[4].Value);
 								region = new Region(x, y, w, h);
 							} else {
-								throw new FormatException("Invalid region: " + regionString);
+								throw new FormatException("Invalid region: " + arg);
+							}
+							break;
+
+						case "-s":
+						case "--shift":
+							i ++;
+							arg = args[i].ToLower();
+							if ((match = new Regex("^([-+]?\\d+)[:,]([-+]?\\d+)[x;,]([-+]?\\d+)[:,]([-+]?\\d+)$").Match(arg)).Success) {
+								int x1 = Convert.ToInt32(match.Groups[1].Value);
+								int y1 = Convert.ToInt32(match.Groups[2].Value);
+								int x2 = Convert.ToInt32(match.Groups[3].Value);
+								int y2 = Convert.ToInt32(match.Groups[4].Value);
+								shift = new Region(x1, y1, x2, y2);
 							}
 							break;
 					}
@@ -206,6 +231,7 @@ namespace ScrSh {
 				Environment.Exit(EXIT_FAILURE);
 				return;
 			}
+
 			if (path == null) {
 				createSaveDialog = true;
 			}
@@ -216,6 +242,14 @@ namespace ScrSh {
 				region.Left = (Screen.PrimaryScreen.Bounds.Width - region.Width) / 2;
 				region.Top = (Screen.PrimaryScreen.Bounds.Height - region.Height) / 2;
 				createGUI = true;
+			}
+
+			//add shift values
+			if (shift != null) {
+				region.Left += shift.Left;
+				region.Top += shift.Top;
+				region.Width += shift.Width;
+				region.Height += shift.Height;
 			}
 
 			//choose region using gui if neccessary
@@ -237,6 +271,7 @@ namespace ScrSh {
 				}
 				region = new Region(form.Left, form.Top, form.Width, form.Height);
 			}
+
 			if (region.Width == 0 || region.Height == 0) {
 				Console.Error.WriteLine("Specified region is empty");
 				Environment.Exit(EXIT_FAILURE);
