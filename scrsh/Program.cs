@@ -26,7 +26,7 @@ namespace ScrSh {
 			public int Top = 0;
 			public int Width = 0;
 			public int Height = 0;
-			
+
 			public int Right {
 				get { return Left + Width; }
 				set { Width = value - Left; }
@@ -58,22 +58,37 @@ namespace ScrSh {
 			wr.WriteLine(String.Format("Usage: {0} [OPTION]...", System.IO.Path.GetFileName(Environment.GetCommandLineArgs()[0])));
 			wr.WriteLine();
 			wr.WriteLine("Options:");
-			wr.WriteLine(" -p, --path PATH    Output screenshot to specified path.");
-			wr.WriteLine("                    If unspecified, save dialog will appear.");
-			wr.WriteLine("                    If file already exists, it will be overwritten.");
-			wr.WriteLine(" -r, --region REG   Make screenshot of region REG. REG can be one of following:");
-			wr.WriteLine("                    active-window");
-			wr.WriteLine("                    active-monitor  (has mouse pointer)");
-			wr.WriteLine("                    primary-monitor (usually with taskbar)");
-			wr.WriteLine("                    all-monitors");
-			wr.WriteLine("                    monitor,NUM");
-			wr.WriteLine("                    X,Y,WIDTH,HEIGHT");
-			wr.WriteLine(" -f, --format FMT   Save screenshot in specified format. FMT can be jpg or png.");
-			wr.WriteLine("                    Compression for jpg can be set using FMT=jpg:NUM.");
-			wr.WriteLine(" -g, --gui          Force gui window to appear, even if region was specified.");
-			wr.WriteLine("     --save-dialog  Force save dialog to appear, even if path was specified.");
-			wr.WriteLine(" -h, --help         Display help and exit");
-			wr.WriteLine(" -v, --version      Print version information and exit");
+			wr.WriteLine();
+			wr.WriteLine(" -p, --path PATH");
+			wr.WriteLine("    Outputs screenshot to specified path.");
+			wr.WriteLine("    If unspecified, save dialog will appear.");
+			wr.WriteLine("    If file already exists, it will be overwritten.");
+			wr.WriteLine();
+			wr.WriteLine(" -r, --region REG");
+			wr.WriteLine("    Make screenshot of region REG. REG can be one of following:");
+			wr.WriteLine("        active-window");
+			wr.WriteLine("        active-monitor  (has mouse pointer)");
+			wr.WriteLine("        primary-monitor (usually with taskbar)");
+			wr.WriteLine("        all-monitors");
+			wr.WriteLine("        monitor,NUM");
+			wr.WriteLine("        X,Y,WIDTH,HEIGHT");
+			wr.WriteLine("    If region is empty, no screenshot will be taken and program with exit 1.");
+			wr.WriteLine();
+			wr.WriteLine(" -f, --format FMT");
+			wr.WriteLine("    Save screenshot in specified format. FMT can be jpg or png.");
+			wr.WriteLine("    Compression for jpg can be set using FMT=jpg:NUM syntax.");
+			wr.WriteLine();
+			wr.WriteLine(" -g, --gui");
+			wr.WriteLine("    Force gui window to appear, even if region was specified.");
+			wr.WriteLine();
+			wr.WriteLine(" --save-dialog");
+			wr.WriteLine("    Force save dialog to appear, even if path was specified.");
+			wr.WriteLine();
+			wr.WriteLine(" -h, --help");
+			wr.WriteLine("    Display help and exit");
+			wr.WriteLine();
+			wr.WriteLine(" -v, --version");
+			wr.WriteLine("    Print version information and exit");
 		}
 
 
@@ -100,7 +115,7 @@ namespace ScrSh {
 							break;
 						case "-v":
 						case "--version":
-							Console.Out.WriteLine("2012-08-19");
+							Console.Out.WriteLine("2013-02-18");
 							Environment.Exit(0);
 							break;
 						case "-f":
@@ -168,7 +183,7 @@ namespace ScrSh {
 									Environment.Exit(EXIT_FAILURE);
 									return;
 								}
-							} else if ((match = new Regex("^(-?\\d+)[:,](-?\\d+)[;,](\\d+)[:,](\\d+)$").Match(regionString)).Success) {
+							} else if ((match = new Regex("^(-?\\d+)[:,](-?\\d+)[x;,](\\d+)[:,](\\d+)$").Match(regionString)).Success) {
 								int x = Convert.ToInt32(match.Groups[1].Value);
 								int y = Convert.ToInt32(match.Groups[2].Value);
 								int w = Convert.ToInt32(match.Groups[3].Value);
@@ -221,6 +236,11 @@ namespace ScrSh {
 					return;
 				}
 				region = new Region(form.Left, form.Top, form.Width, form.Height);
+			}
+			if (region.Width == 0 || region.Height == 0) {
+				Console.Error.WriteLine("Specified region is empty");
+				Environment.Exit(EXIT_FAILURE);
+				return;
 			}
 
 			//make screenshot itself
