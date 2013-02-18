@@ -188,6 +188,8 @@ namespace ScrSh {
 								int x2 = Convert.ToInt32(match.Groups[3].Value);
 								int y2 = Convert.ToInt32(match.Groups[4].Value);
 								shift = new Region(x1, y1, x2, y2);
+							} else {
+								throw new FormatException("Invalid shift region: " + arg);
 							}
 							break;
 					}
