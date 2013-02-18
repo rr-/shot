@@ -1,0 +1,40 @@
+﻿Usage: {program} [OPTION]...
+
+Options:
+
+ -p, --path PATH
+    Outputs screenshot to specified path.
+    If unspecified, save dialog will appear.
+    If file already exists, it will be overwritten.
+
+ -r, --region REG
+    Make screenshot of region REG. REG can be one of following:
+        active-window
+        active-monitor  (has mouse pointer)
+        primary-monitor (usually with taskbar)
+        all-monitors
+        monitor,NUM
+        X,Y,WIDTH,HEIGHT
+    If region is empty, no screenshot will be taken and program will
+    exit with status code 1.
+
+ -s, --shift X1,Y1,X2,Y2
+    Shifts region coordinates by X1,Y1 and X2,Y2 values.
+    Shift is applied only after computing region coordinates, but
+    before showing GUI.
+
+ -f, --format FMT
+    Save screenshot in specified format. FMT can be jpg or png.
+    Compression for jpg can be set using FMT=jpg:NUM syntax.
+
+ -g, --gui, --force-gui
+    Force gui window to appear, even if region was specified.
+
+ --save-dialog, --force-save-dialog
+    Force save dialog to appear, even if path was specified.
+
+ -h, --help
+    Display help and exit.
+
+ -v, --version
+    Print version information and exit.

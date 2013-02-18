@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Reflection;
 
 namespace ScrSh {
 	internal sealed class Program {
@@ -54,47 +55,18 @@ namespace ScrSh {
 			}
 		}
 
-		private static void printUsage(TextWriter wr) {
-			wr.WriteLine(String.Format("Usage: {0} [OPTION]...", System.IO.Path.GetFileName(Environment.GetCommandLineArgs()[0])));
-			wr.WriteLine();
-			wr.WriteLine("Options:");
-			wr.WriteLine();
-			wr.WriteLine(" -p, --path PATH");
-			wr.WriteLine("    Outputs screenshot to specified path.");
-			wr.WriteLine("    If unspecified, save dialog will appear.");
-			wr.WriteLine("    If file already exists, it will be overwritten.");
-			wr.WriteLine();
-			wr.WriteLine(" -r, --region REG");
-			wr.WriteLine("    Make screenshot of region REG. REG can be one of following:");
-			wr.WriteLine("        active-window");
-			wr.WriteLine("        active-monitor  (has mouse pointer)");
-			wr.WriteLine("        primary-monitor (usually with taskbar)");
-			wr.WriteLine("        all-monitors");
-			wr.WriteLine("        monitor,NUM");
-			wr.WriteLine("        X,Y,WIDTH,HEIGHT");
-			wr.WriteLine("    If region is empty, no screenshot will be taken and program will");
-			wr.WriteLine("    exit with status code 1.");
-			wr.WriteLine();
-			wr.WriteLine(" -s, --shift X1,Y1,X2,Y2");
-			wr.WriteLine("    Shifts region coordinates by X1,Y1 and X2,Y2 values.");
-			wr.WriteLine("    Shift is applied only after computing region coordinates, but");
-			wr.WriteLine("    before showing GUI.");
-			wr.WriteLine();
-			wr.WriteLine(" -f, --format FMT");
-			wr.WriteLine("    Save screenshot in specified format. FMT can be jpg or png.");
-			wr.WriteLine("    Compression for jpg can be set using FMT=jpg:NUM syntax.");
-			wr.WriteLine();
-			wr.WriteLine(" -g, --gui, --force-gui");
-			wr.WriteLine("    Force gui window to appear, even if region was specified.");
-			wr.WriteLine();
-			wr.WriteLine(" --save-dialog, --force-save-dialog");
-			wr.WriteLine("    Force save dialog to appear, even if path was specified.");
-			wr.WriteLine();
-			wr.WriteLine(" -h, --help");
-			wr.WriteLine("    Display help and exit.");
-			wr.WriteLine();
-			wr.WriteLine(" -v, --version");
-			wr.WriteLine("    Print version information and exit.");
+		private static void printUsage(TextWriter writer) {
+			using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("help.txt")) {
+				using (StreamReader reader = new StreamReader(stream)) {
+					String inputLine = null;
+					while ((inputLine = reader.ReadLine()) != null) {
+						String outputLine = inputLine;
+						outputLine = outputLine.Replace("{program}", System.IO.Path.GetFileName(Environment.GetCommandLineArgs()[0]));
+						writer.WriteLine(outputLine);
+					}
+				}
+			}
+
 		}
 
 
