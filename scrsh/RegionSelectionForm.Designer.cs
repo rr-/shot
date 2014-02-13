@@ -27,7 +27,7 @@ namespace ScrSh
 			this.Name = "RegionSelectionForm";
 			this.Opacity = 0.33d;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-			this.Text = "ScrSh";
+			this.Text = "Screenshot region selection";
 			this.TopMost = true;
 			this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.RegionSelectionFormKeyDown);
 			this.ResumeLayout(false);

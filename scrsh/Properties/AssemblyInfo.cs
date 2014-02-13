@@ -9,12 +9,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ScrSh")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("scrsh")]
+[assembly: AssemblyDescription("Make screenshots from CLI.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ScrSh")]
-[assembly: AssemblyCopyright("Copyright 2012")]
+[assembly: AssemblyProduct("scrsh")]
+[assembly: AssemblyCopyright("Copyright (C) 2012-2014 Marcin Kurczewski")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
