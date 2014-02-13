@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
+using System.Linq;
 using System.Windows.Forms;
 using System.Reflection;
 
@@ -12,394 +10,262 @@ namespace ScrSh
 {
 	internal sealed class Program
 	{
-		private static readonly Int32 EXIT_SUCCESS = 0;
-		private static readonly Int32 EXIT_FAILURE = 1;
-		[DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
-		[DllImport("user32.dll", SetLastError = true)] static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-		[StructLayout(LayoutKind.Sequential)]
-		public struct RECT
+		/// <summary>
+		/// Program version.
+		/// </summary>
+		public static string Version
 		{
-			public int Left;
-			public int Top;
-			public int Right;
-			public int Bottom;
-		}
-
-		private class Region
-		{
-			public int Left = 0;
-			public int Top = 0;
-			public int Width = 0;
-			public int Height = 0;
-
-			public int Right
+			get
 			{
-				get { return Left + Width; }
-				set { Width = value - Left; }
-			}
-			public int Bottom
-			{
-				get { return Top + Height; }
-				set { Height = value - Top; }
-			}
-
-			public Region()
-			{
-			}
-
-			public Region(Rectangle rect)
-			{
-				Left = rect.Left;
-				Top = rect.Top;
-				Width = rect.Width;
-				Height = rect.Height;
-			}
-
-			public Region(int left, int top, int width, int height)
-			{
-				Left = left;
-				Top = top;
-				Width = width;
-				Height = height;
+				return "2014-02-13";
 			}
 		}
 
-		private static void printUsage(TextWriter writer)
+		/// <summary>
+		/// Main program function.
+		/// </summary>
+		[STAThread]
+		private static void Main()
+		{
+			//parse command line arguments
+			ProgramOptions programOptions;
+			try
+			{
+				string[] args = Environment.GetCommandLineArgs();
+				programOptions = ProgramOptionParser.Parse(args);
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine(ex.Message);
+				PrintUsage(Console.Error);
+				Exit(ExitStatus.Failure);
+				return;
+			}
+
+			try
+			{
+				if (programOptions.Path == null)
+					programOptions.GetPathFromSaveDialog = true;
+
+				if (programOptions.Region == null)
+					programOptions.GetRegionFromGui = true;
+
+				//add shift values
+				if (programOptions.Shift != null)
+				{
+					if (programOptions.Region == null)
+						throw new InvalidOperationException("It makes no sense to shift region, if it's going to be chosen from GUI");
+
+					programOptions.Region.Left += programOptions.Shift.Left;
+					programOptions.Region.Top += programOptions.Shift.Top;
+					programOptions.Region.Width += programOptions.Shift.Width;
+					programOptions.Region.Height += programOptions.Shift.Height;
+				}
+
+				//choose region using gui if neccessary
+				if (programOptions.GetRegionFromGui)
+					programOptions.Region = DoGetRegionFromGui(programOptions.Region);
+
+				if (programOptions.Region == null ||
+					programOptions.Region.Width <= 0 ||
+					programOptions.Region.Height <= 0)
+				{
+					throw new InvalidOperationException("Specified region is empty");
+				}
+
+				Console.Out.WriteLine(
+					"{0},{1};{2}x{3}",
+					programOptions.Region.Left,
+					programOptions.Region.Top,
+					programOptions.Region.Width,
+					programOptions.Region.Height);
+
+				//make screenshot itself
+				Bitmap image = GetScreenshot(programOptions.Region);
+
+				//ask for filename if neccessary
+				if (programOptions.GetPathFromSaveDialog)
+					programOptions.Path = DoGetPathFromSaveDialog(programOptions.Path);
+
+				if (programOptions.Path == null)
+					throw new InvalidOperationException("Unspecified path");
+
+				SaveScreenshot(image, programOptions);
+
+				Exit(ExitStatus.Success);
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine(ex.Message);
+				Exit(ExitStatus.Failure);
+			}
+		}
+
+		/// <summary>
+		/// Prints program usage from embedded resources to specified stream.
+		/// </summary>
+		/// <param name="writer">Stream to print program usage to.</param>
+		public static void PrintUsage(TextWriter writer)
 		{
 			using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("help.txt"))
 			{
+				if (stream == null)
+					throw new NullReferenceException("Cannot read help file from resources");
+
 				using (StreamReader reader = new StreamReader(stream))
 				{
-					String inputLine = null;
+					string inputLine;
 					while ((inputLine = reader.ReadLine()) != null)
 					{
-						String outputLine = inputLine;
-						outputLine = outputLine.Replace("{program}", System.IO.Path.GetFileName(Environment.GetCommandLineArgs()[0]));
+						string outputLine = inputLine;
+						outputLine = outputLine.Replace("{program}", Path.GetFileName(Environment.GetCommandLineArgs()[0]));
 						writer.WriteLine(outputLine);
 					}
 				}
 			}
-
 		}
 
-
-		[STAThread]
-		private static void Main(string[] _args)
+		/// <summary>
+		/// Exits the program with correct exit code.
+		/// </summary>
+		/// <param name="exitStatus">Used to derive exit code to exit with.</param>
+		public static void Exit(ExitStatus exitStatus)
 		{
-			Match match;
-			Region region = null;
-			Region shift = null;
+			int exitCode;
 
-			bool createGUI = false;
-			bool createSaveDialog = false;
-			String path = null;
-			String format = null;
-
-			//parse command line arguments
-			String[] args = Environment.GetCommandLineArgs();
-			try
+			switch (exitStatus)
 			{
-				for (int i = 1; i < args.Length; i ++)
-				{
-					String arg = args[i].ToLower();
-					switch (arg)
-					{
-						case "-h":
-						case "--help":
-							Program.printUsage(Console.Out);
-							Environment.Exit(0);
-							break;
+				case ExitStatus.Success:
+					exitCode = 0;
+					break;
 
-						case "-v":
-						case "--version":
-							Console.Out.WriteLine("2013-02-18");
-							Environment.Exit(0);
-							break;
-
-						case "-f":
-						case "--format":
-							i ++;
-							format = args[i].ToLower();
-							break;
-
-						case "-p":
-						case "--path":
-							i ++;
-							try
-							{
-								path = System.IO.Path.GetFullPath(args[i]);
-							}
-							catch (Exception e)
-							{
-								Console.Error.WriteLine(String.Format("Invalid path \"{0}\" ({1})", path, e.Message));
-								Environment.Exit(EXIT_FAILURE);
-								return;
-							}
-							break;
-
-						case "--save-dialog":
-						case "--force-save-dialog":
-							createSaveDialog = true;
-							break;
-
-						case "-g":
-						case "--gui":
-						case "--force-gui":
-							createGUI = true;
-							break;
-
-						case "-r":
-						case "--region":
-							i ++;
-							arg = args[i].ToLower();
-							if (arg == "all-monitors")
-							{
-								region = new Region(Screen.PrimaryScreen.Bounds);
-								foreach (Screen screen in Screen.AllScreens)
-								{
-									region.Left = Math.Min(region.Left, screen.Bounds.Left);
-									region.Top = Math.Min(region.Top, screen.Bounds.Top);
-									region.Right = Math.Max(region.Right, screen.Bounds.Right);
-									region.Bottom = Math.Max(region.Bottom, screen.Bounds.Bottom);
-								}
-							}
-							else if (arg == "primary-monitor")
-							{
-								region = new Region(Screen.PrimaryScreen.Bounds);
-							}
-							else if (arg == "active-monitor")
-							{
-								foreach (Screen screen in Screen.AllScreens)
-								{
-									if (screen.Bounds.Contains(Cursor.Position))
-									{
-										region = new Region(screen.Bounds);
-									}
-								}
-								if (region == null)
-								{
-									Console.Error.WriteLine("Invalid cursor position (?)");
-									Environment.Exit(EXIT_FAILURE);
-									return;
-								}
-							}
-							else if (arg == "active-window")
-							{
-								IntPtr handle = GetForegroundWindow();
-								RECT rect;
-								GetWindowRect(handle, out rect);
-								region = new Region(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
-							}
-							else if ((match = new Regex("^monitor[-,](\\d+)$").Match(arg)).Success)
-							{
-								int monitorNum = Convert.ToInt32(match.Groups[1].Value);
-								try
-								{
-									region = new Region(Screen.AllScreens[monitorNum - 1].Bounds);
-								}
-								catch (IndexOutOfRangeException)
-								{
-									Console.Error.WriteLine(String.Format("Monitor{0} out of range (valid monitors: 1..{1})", monitorNum, Screen.AllScreens.Length));
-									Environment.Exit(EXIT_FAILURE);
-									return;
-								}
-							}
-							else if ((match = new Regex("^(-?\\d+)[:,](-?\\d+)[x;,](\\d+)[:,](\\d+)$").Match(arg)).Success)
-							{
-								int x = Convert.ToInt32(match.Groups[1].Value);
-								int y = Convert.ToInt32(match.Groups[2].Value);
-								int w = Convert.ToInt32(match.Groups[3].Value);
-								int h = Convert.ToInt32(match.Groups[4].Value);
-								region = new Region(x, y, w, h);
-							}
-							else
-							{
-								throw new FormatException("Invalid region: " + arg);
-							}
-							break;
-
-						case "-s":
-						case "--shift":
-							i ++;
-							arg = args[i].ToLower();
-							if ((match = new Regex("^([-+]?\\d+)[:,]([-+]?\\d+)[x;,]([-+]?\\d+)[:,]([-+]?\\d+)$").Match(arg)).Success)
-							{
-								int x1 = Convert.ToInt32(match.Groups[1].Value);
-								int y1 = Convert.ToInt32(match.Groups[2].Value);
-								int x2 = Convert.ToInt32(match.Groups[3].Value);
-								int y2 = Convert.ToInt32(match.Groups[4].Value);
-								shift = new Region(x1, y1, x2, y2);
-							}
-							else
-							{
-								throw new FormatException("Invalid shift region: " + arg);
-							}
-							break;
-					}
-				}
-			}
-			catch (IndexOutOfRangeException)
-			{
-				Console.Error.WriteLine("Expected command line argument was not found");
-				printUsage(Console.Error);
-				Environment.Exit(EXIT_FAILURE);
-				return;
-			}
-			catch (FormatException)
-			{
-				Console.Error.WriteLine("Specified argument is invalid");
-				printUsage(Console.Error);
-				Environment.Exit(EXIT_FAILURE);
-				return;
+				default:
+					exitCode = 1;
+					break;
 			}
 
-			if (path == null)
+			Environment.Exit(exitCode);
+		}
+
+		/// <summary>
+		/// Saves specified screenshot using program options.
+		/// </summary>
+		/// <param name="image">Image to save.</param>
+		/// <param name="programOptions">Program options to get path and save options from.</param>
+		private static void SaveScreenshot(Bitmap image, ProgramOptions programOptions)
+		{
+			string format = Path.GetExtension(programOptions.Path);
+			if (format == null)
+				throw new FormatException("Unrecognized image format");
+			format = format.ToLower();
+
+			string dir = Path.GetDirectoryName(programOptions.Path);
+			if (dir != null && !Directory.Exists(dir))
+				Directory.CreateDirectory(dir);
+
+			ImageCodecInfo encoder;
+			EncoderParameters encoderParameters;
+
+			switch (format)
 			{
-				createSaveDialog = true;
+				case ".jpg":
+					int quality = 66;
+					if (programOptions.CompressionLevel.HasValue)
+						quality = 100 - Math.Max(0, Math.Min(100, programOptions.CompressionLevel.Value));
+					encoder = ImageCodecInfo.GetImageDecoders().Single(codec => codec.FormatID == ImageFormat.Jpeg.Guid);
+					encoderParameters = new EncoderParameters(1);
+					encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, quality);
+					break;
+
+				case ".png":
+					encoder = ImageCodecInfo.GetImageDecoders().Single(codec => codec.FormatID == ImageFormat.Png.Guid);
+					encoderParameters = null;
+					break;
+
+				default:
+					throw new FormatException(string.Format("Unrecognized image format: {0}", format));
 			}
+
+			if (encoder == null)
+				throw new NotSupportedException("Failed to load image encoder");
+
+			image.Save(programOptions.Path, encoder, encoderParameters);
+		}
+
+		/// <summary>
+		/// Retrieves region to take screenshot of, using graphical user interface.
+		/// </summary>
+		/// <param name="region">Region to initialize graphical user interface with. If null, default one will be used.</param>
+		/// <returns>New region.</returns>
+		private static Region DoGetRegionFromGui(Region region)
+		{
+			Application.EnableVisualStyles();
+			Application.SetCompatibleTextRenderingDefault(false);
+			RegionSelectionForm form = new RegionSelectionForm();
+			form.Show();
+
 			if (region == null)
 			{
-				region = new Region();
-				region.Width = 640;
-				region.Height = 480;
-				region.Left = (Screen.PrimaryScreen.Bounds.Width - region.Width) / 2;
-				region.Top = (Screen.PrimaryScreen.Bounds.Height - region.Height) / 2;
-				createGUI = true;
-			}
+				const int width = 640;
+				const int height = 480;
 
-			//add shift values
-			if (shift != null)
-			{
-				region.Left += shift.Left;
-				region.Top += shift.Top;
-				region.Width += shift.Width;
-				region.Height += shift.Height;
-			}
-
-			//choose region using gui if neccessary
-			if (createGUI)
-			{
-				Application.EnableVisualStyles();
-				Application.SetCompatibleTextRenderingDefault(false);
-				MainForm form = new MainForm();
-				form.Show();
-				if (region != null)
+				region = new Region
 				{
-					form.Left = region.Left;
-					form.Top = region.Top;
-					form.Size = new Size(region.Width, region.Height);
-				}
-				Application.Run(form);
-				if (!form.success)
-				{
-					Console.WriteLine("Cancelled by user");
-					Environment.Exit(EXIT_FAILURE);
-					return;
-				}
-				region = new Region(form.Left, form.Top, form.Width, form.Height);
+					Width = width,
+					Height = height,
+					Left = (Screen.PrimaryScreen.Bounds.Width - width) / 2,
+					Top = (Screen.PrimaryScreen.Bounds.Height - height) / 2,
+				};
 			}
 
-			if (region.Width == 0 || region.Height == 0)
+			form.SelectedRegion = region;
+			Application.Run(form);
+
+			if (!form.Success)
+				throw new OperationCanceledException("Cancelled by user");
+
+			return form.SelectedRegion;
+		}
+
+		/// <summary>
+		/// Retrieves path to save screenshot to, using graphical user interface.
+		/// </summary>
+		/// <param name="suppliedPath">Default path to initialize save dialog with.</param>
+		/// <returns>New save path.</returns>
+		private static string DoGetPathFromSaveDialog(string suppliedPath)
+		{
+			SaveFileDialog dialog = new SaveFileDialog
 			{
-				Console.Error.WriteLine("Specified region is empty");
-				Environment.Exit(EXIT_FAILURE);
-				return;
+				Title = "Save file as...",
+				Filter = "JPEG files (*.jpg)|*.jpg|PNG files (*.png)|*.png|All files (*.*)|*.*",
+				RestoreDirectory = false
+			};
+			if (suppliedPath != null)
+			{
+				string dir = Path.GetDirectoryName(suppliedPath);
+				if (dir != null && Directory.Exists(dir))
+					dialog.InitialDirectory = Path.GetDirectoryName(suppliedPath);
+
+				dialog.FileName = Path.GetFileName(suppliedPath);
 			}
 
-			//make screenshot itself
-			Bitmap image = new Bitmap(region.Width, region.Height, PixelFormat.Format24bppRgb);
+			if (dialog.ShowDialog() != DialogResult.OK)
+				throw new OperationCanceledException("Cancelled by user");
+
+			return dialog.FileName;
+		}
+
+		/// <summary>
+		/// Retrieves screenshot of specified region.
+		/// </summary>
+		/// <param name="region">Region to make screenshot of.</param>
+		/// <returns>Bitmap containing screenshot.</returns>
+		private static Bitmap GetScreenshot(Region region)
+		{
+			var image = new Bitmap(region.Width, region.Height, PixelFormat.Format24bppRgb);
 			Graphics g = Graphics.FromImage(image);
 			g.CopyFromScreen(region.Left, region.Top, 0, 0, new Size(region.Width, region.Height), CopyPixelOperation.SourceCopy);
-
-			//ask for filename if neccessary
-			if (createSaveDialog)
-			{
-				SaveFileDialog dialog = new SaveFileDialog();
-				dialog.Title = "Save file as...";
-				dialog.Filter = "JPEG files (*.jpg)|*.jpg|PNG files (*.png)|*.png|All files (*.*)|*.*";
-				dialog.RestoreDirectory = false;
-				if (path != null)
-				{
-					String dir = System.IO.Path.GetDirectoryName(path);
-					if (System.IO.Directory.Exists(dir))
-					{
-						dialog.InitialDirectory = System.IO.Path.GetDirectoryName(path);
-					}
-					dialog.FileName = System.IO.Path.GetFileName(path);
-				}
-
-				if (dialog.ShowDialog() == DialogResult.OK)
-				{
-					path = dialog.FileName;
-				}
-				else
-				{
-					Console.WriteLine("Cancelled by user");
-					Environment.Exit(EXIT_FAILURE);
-					return;
-				}
-			}
-			if (createSaveDialog || format == null)
-			{
-				//overwrite format with extension
-				format = System.IO.Path.GetExtension(path).Replace(".", "");
-			}
-
-			{
-				String dir = System.IO.Path.GetDirectoryName(path);
-				if (!System.IO.Directory.Exists(dir))
-				{
-					System.IO.Directory.CreateDirectory(dir);
-				}
-			}
-
-			try
-			{
-				if ((match = new Regex("^jpg(:([0-9]+))?$").Match(format)).Success)
-				{
-					ImageCodecInfo jpgDecoder = null;
-					foreach (ImageCodecInfo codec in ImageCodecInfo.GetImageDecoders())
-					{
-						if (codec.FormatID == ImageFormat.Jpeg.Guid)
-						{
-							jpgDecoder = codec;
-						}
-					}
-					if (jpgDecoder == null)
-					{
-						Console.Error.WriteLine("Failed to load JPEG decoder");
-						Environment.Exit(EXIT_FAILURE);
-						return;
-					}
-					int compressionLevel = 66;
-					if (match.Groups[2].Success)
-					{
-						compressionLevel = Convert.ToInt32(match.Groups[2].Value);
-					}
-					System.Drawing.Imaging.Encoder encoder = Encoder.Compression;
-					EncoderParameters encoderParameters = new EncoderParameters(1);
-					encoderParameters.Param[0] = new EncoderParameter(encoder, compressionLevel);
-					image.Save(path, jpgDecoder, encoderParameters);
-				}
-				else if (format == "png")
-				{
-					image.Save(path, ImageFormat.Png);
-				}
-				else
-				{
-					Console.Error.WriteLine(String.Format("Unrecognized format: {0}", format));
-					Environment.Exit(EXIT_FAILURE);
-					return;
-				}
-			}
-			catch (IOException e)
-			{
-				Console.Error.WriteLine(String.Format("Failed to write screenshot to \"{0}\" ({1})", path, e.Message));
-				Environment.Exit(EXIT_FAILURE);
-				return;
-			}
-
-			Environment.Exit(EXIT_SUCCESS);
+			return image;
 		}
 	}
 }

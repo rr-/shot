@@ -10,11 +10,11 @@ Options:
  -r, --region REG
     Make screenshot of region REG. REG can be one of following:
         active-window
-        active-monitor  (has mouse pointer)
-        primary-monitor (usually with taskbar)
+        active-monitor (monitor containing mouse pointer)
+        primary-monitor (in most cases - the one with taskbar)
         all-monitors
         monitor,NUM
-        X,Y,WIDTH,HEIGHT
+        X,Y;WIDTH:HEIGHT
     If region is empty, no screenshot will be taken and program will
     exit with status code 1.
 
@@ -23,9 +23,9 @@ Options:
     Shift is applied only after computing region coordinates, but
     before showing GUI.
 
- -f, --format FMT
-    Save screenshot in specified format. FMT can be jpg or png.
-    Compression for jpg can be set using FMT=jpg:NUM syntax.
+ -c, --compression INT
+    Save screenshot with specified compression level.
+    Can be set only for JPG format. (Default = 66)
 
  -g, --gui, --force-gui
     Force gui window to appear, even if region was specified.

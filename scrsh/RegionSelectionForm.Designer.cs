@@ -1,6 +1,6 @@
 namespace ScrSh
 {
-	partial class MainForm
+	partial class RegionSelectionForm
 	{
 		private System.ComponentModel.IContainer components = null;
 
@@ -24,8 +24,8 @@ namespace ScrSh
 			this.ControlBox = false;
 			this.DoubleBuffered = true;
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-			this.Name = "MainForm";
-			this.Opacity = 0.33D;
+			this.Name = "RegionSelectionForm";
+			this.Opacity = 0.33d;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
 			this.Text = "ScrSh";
 			this.TopMost = true;
