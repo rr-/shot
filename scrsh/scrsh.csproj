@@ -67,7 +67,7 @@
     <Compile Include="WindowHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="MainForm.resx">
+    <EmbeddedResource Include="RegionSelectionForm.resx">
       <DependentUpon>RegionSelectionForm.Designer.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

@@ -29,7 +29,7 @@ namespace ScrSh
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
 			this.Text = "ScrSh";
 			this.TopMost = true;
-			this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainFormKeyDown);
+			this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.RegionSelectionFormKeyDown);
 			this.ResumeLayout(false);
 		}
 	}

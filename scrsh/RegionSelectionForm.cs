@@ -107,7 +107,7 @@ namespace ScrSh
 			m.Result = (IntPtr) results[sectionVertical + 1, sectionHorizontal + 1];
 		}
 
-		public void MainFormKeyDown(object sender, KeyEventArgs e)
+		public void RegionSelectionFormKeyDown(object sender, KeyEventArgs e)
 		{
 			switch (e.KeyCode)
 			{
