@@ -1,17 +1,23 @@
-﻿namespace ScrSh {
-	partial class MainForm {
+namespace ScrSh
+{
+	partial class MainForm
+	{
 		private System.ComponentModel.IContainer components = null;
-		
-		protected override void Dispose(bool disposing) {
-			if (disposing) {
-				if (components != null) {
+
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				if (components != null)
+				{
 					components.Dispose();
 				}
 			}
 			base.Dispose(disposing);
 		}
-		
-		private void InitializeComponent() {
+
+		private void InitializeComponent()
+		{
 			this.SuspendLayout();
 			this.BackColor = System.Drawing.SystemColors.Highlight;
 			this.ClientSize = new System.Drawing.Size(320, 240);

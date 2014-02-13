@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -8,46 +8,55 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Reflection;
 
-namespace ScrSh {
-	internal sealed class Program {
+namespace ScrSh
+{
+	internal sealed class Program
+	{
 		private static readonly Int32 EXIT_SUCCESS = 0;
 		private static readonly Int32 EXIT_FAILURE = 1;
 		[DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
 		[DllImport("user32.dll", SetLastError = true)] static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 		[StructLayout(LayoutKind.Sequential)]
-		public struct RECT {
+		public struct RECT
+		{
 			public int Left;
 			public int Top;
 			public int Right;
 			public int Bottom;
 		}
 
-		private class Region {
+		private class Region
+		{
 			public int Left = 0;
 			public int Top = 0;
 			public int Width = 0;
 			public int Height = 0;
 
-			public int Right {
+			public int Right
+			{
 				get { return Left + Width; }
 				set { Width = value - Left; }
 			}
-			public int Bottom {
+			public int Bottom
+			{
 				get { return Top + Height; }
 				set { Height = value - Top; }
 			}
 
-			public Region() {
+			public Region()
+			{
 			}
 
-			public Region(Rectangle rect) {
+			public Region(Rectangle rect)
+			{
 				Left = rect.Left;
 				Top = rect.Top;
 				Width = rect.Width;
 				Height = rect.Height;
 			}
 
-			public Region(int left, int top, int width, int height) {
+			public Region(int left, int top, int width, int height)
+			{
 				Left = left;
 				Top = top;
 				Width = width;
@@ -55,11 +64,15 @@ namespace ScrSh {
 			}
 		}
 
-		private static void printUsage(TextWriter writer) {
-			using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("help.txt")) {
-				using (StreamReader reader = new StreamReader(stream)) {
+		private static void printUsage(TextWriter writer)
+		{
+			using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("help.txt"))
+			{
+				using (StreamReader reader = new StreamReader(stream))
+				{
 					String inputLine = null;
-					while ((inputLine = reader.ReadLine()) != null) {
+					while ((inputLine = reader.ReadLine()) != null)
+					{
 						String outputLine = inputLine;
 						outputLine = outputLine.Replace("{program}", System.IO.Path.GetFileName(Environment.GetCommandLineArgs()[0]));
 						writer.WriteLine(outputLine);
@@ -71,7 +84,8 @@ namespace ScrSh {
 
 
 		[STAThread]
-		private static void Main(string[] _args) {
+		private static void Main(string[] _args)
+		{
 			Match match;
 			Region region = null;
 			Region shift = null;
@@ -83,10 +97,13 @@ namespace ScrSh {
 
 			//parse command line arguments
 			String[] args = Environment.GetCommandLineArgs();
-			try {
-				for (int i = 1; i < args.Length; i ++) {
+			try
+			{
+				for (int i = 1; i < args.Length; i ++)
+				{
 					String arg = args[i].ToLower();
-					switch (arg) {
+					switch (arg)
+					{
 						case "-h":
 						case "--help":
 							Program.printUsage(Console.Out);
@@ -108,9 +125,12 @@ namespace ScrSh {
 						case "-p":
 						case "--path":
 							i ++;
-							try {
+							try
+							{
 								path = System.IO.Path.GetFullPath(args[i]);
-							} catch (Exception e) {
+							}
+							catch (Exception e)
+							{
 								Console.Error.WriteLine(String.Format("Invalid path \"{0}\" ({1})", path, e.Message));
 								Environment.Exit(EXIT_FAILURE);
 								return;
@@ -132,48 +152,68 @@ namespace ScrSh {
 						case "--region":
 							i ++;
 							arg = args[i].ToLower();
-							if (arg == "all-monitors") {
+							if (arg == "all-monitors")
+							{
 								region = new Region(Screen.PrimaryScreen.Bounds);
-								foreach (Screen screen in Screen.AllScreens) {
+								foreach (Screen screen in Screen.AllScreens)
+								{
 									region.Left = Math.Min(region.Left, screen.Bounds.Left);
 									region.Top = Math.Min(region.Top, screen.Bounds.Top);
 									region.Right = Math.Max(region.Right, screen.Bounds.Right);
 									region.Bottom = Math.Max(region.Bottom, screen.Bounds.Bottom);
 								}
-							} else if (arg == "primary-monitor") {
+							}
+							else if (arg == "primary-monitor")
+							{
 								region = new Region(Screen.PrimaryScreen.Bounds);
-							} else if (arg == "active-monitor") {
-								foreach (Screen screen in Screen.AllScreens) {
-									if (screen.Bounds.Contains(Cursor.Position)) {
+							}
+							else if (arg == "active-monitor")
+							{
+								foreach (Screen screen in Screen.AllScreens)
+								{
+									if (screen.Bounds.Contains(Cursor.Position))
+									{
 										region = new Region(screen.Bounds);
 									}
 								}
-								if (region == null) {
+								if (region == null)
+								{
 									Console.Error.WriteLine("Invalid cursor position (?)");
 									Environment.Exit(EXIT_FAILURE);
 									return;
 								}
-							} else if (arg == "active-window") {
+							}
+							else if (arg == "active-window")
+							{
 								IntPtr handle = GetForegroundWindow();
 								RECT rect;
 								GetWindowRect(handle, out rect);
 								region = new Region(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
-							} else if ((match = new Regex("^monitor[-,](\\d+)$").Match(arg)).Success) {
+							}
+							else if ((match = new Regex("^monitor[-,](\\d+)$").Match(arg)).Success)
+							{
 								int monitorNum = Convert.ToInt32(match.Groups[1].Value);
-								try {
+								try
+								{
 									region = new Region(Screen.AllScreens[monitorNum - 1].Bounds);
-								} catch (IndexOutOfRangeException) {
-									Console.Error.WriteLine(String.Format("Monitor {0} out of range (valid monitors: 1..{1})", monitorNum, Screen.AllScreens.Length));
+								}
+								catch (IndexOutOfRangeException)
+								{
+									Console.Error.WriteLine(String.Format("Monitor{0} out of range (valid monitors: 1..{1})", monitorNum, Screen.AllScreens.Length));
 									Environment.Exit(EXIT_FAILURE);
 									return;
 								}
-							} else if ((match = new Regex("^(-?\\d+)[:,](-?\\d+)[x;,](\\d+)[:,](\\d+)$").Match(arg)).Success) {
+							}
+							else if ((match = new Regex("^(-?\\d+)[:,](-?\\d+)[x;,](\\d+)[:,](\\d+)$").Match(arg)).Success)
+							{
 								int x = Convert.ToInt32(match.Groups[1].Value);
 								int y = Convert.ToInt32(match.Groups[2].Value);
 								int w = Convert.ToInt32(match.Groups[3].Value);
 								int h = Convert.ToInt32(match.Groups[4].Value);
 								region = new Region(x, y, w, h);
-							} else {
+							}
+							else
+							{
 								throw new FormatException("Invalid region: " + arg);
 							}
 							break;
@@ -182,34 +222,43 @@ namespace ScrSh {
 						case "--shift":
 							i ++;
 							arg = args[i].ToLower();
-							if ((match = new Regex("^([-+]?\\d+)[:,]([-+]?\\d+)[x;,]([-+]?\\d+)[:,]([-+]?\\d+)$").Match(arg)).Success) {
+							if ((match = new Regex("^([-+]?\\d+)[:,]([-+]?\\d+)[x;,]([-+]?\\d+)[:,]([-+]?\\d+)$").Match(arg)).Success)
+							{
 								int x1 = Convert.ToInt32(match.Groups[1].Value);
 								int y1 = Convert.ToInt32(match.Groups[2].Value);
 								int x2 = Convert.ToInt32(match.Groups[3].Value);
 								int y2 = Convert.ToInt32(match.Groups[4].Value);
 								shift = new Region(x1, y1, x2, y2);
-							} else {
+							}
+							else
+							{
 								throw new FormatException("Invalid shift region: " + arg);
 							}
 							break;
 					}
 				}
-			} catch (IndexOutOfRangeException) {
+			}
+			catch (IndexOutOfRangeException)
+			{
 				Console.Error.WriteLine("Expected command line argument was not found");
 				printUsage(Console.Error);
 				Environment.Exit(EXIT_FAILURE);
 				return;
-			} catch (FormatException) {
+			}
+			catch (FormatException)
+			{
 				Console.Error.WriteLine("Specified argument is invalid");
 				printUsage(Console.Error);
 				Environment.Exit(EXIT_FAILURE);
 				return;
 			}
 
-			if (path == null) {
+			if (path == null)
+			{
 				createSaveDialog = true;
 			}
-			if (region == null) {
+			if (region == null)
+			{
 				region = new Region();
 				region.Width = 640;
 				region.Height = 480;
@@ -219,7 +268,8 @@ namespace ScrSh {
 			}
 
 			//add shift values
-			if (shift != null) {
+			if (shift != null)
+			{
 				region.Left += shift.Left;
 				region.Top += shift.Top;
 				region.Width += shift.Width;
@@ -227,18 +277,21 @@ namespace ScrSh {
 			}
 
 			//choose region using gui if neccessary
-			if (createGUI) {
+			if (createGUI)
+			{
 				Application.EnableVisualStyles();
 				Application.SetCompatibleTextRenderingDefault(false);
 				MainForm form = new MainForm();
 				form.Show();
-				if (region != null) {
+				if (region != null)
+				{
 					form.Left = region.Left;
 					form.Top = region.Top;
 					form.Size = new Size(region.Width, region.Height);
 				}
 				Application.Run(form);
-				if (!form.success) {
+				if (!form.success)
+				{
 					Console.WriteLine("Cancelled by user");
 					Environment.Exit(EXIT_FAILURE);
 					return;
@@ -246,7 +299,8 @@ namespace ScrSh {
 				region = new Region(form.Left, form.Top, form.Width, form.Height);
 			}
 
-			if (region.Width == 0 || region.Height == 0) {
+			if (region.Width == 0 || region.Height == 0)
+			{
 				Console.Error.WriteLine("Specified region is empty");
 				Environment.Exit(EXIT_FAILURE);
 				return;
@@ -258,68 +312,88 @@ namespace ScrSh {
 			g.CopyFromScreen(region.Left, region.Top, 0, 0, new Size(region.Width, region.Height), CopyPixelOperation.SourceCopy);
 
 			//ask for filename if neccessary
-			if (createSaveDialog) {
+			if (createSaveDialog)
+			{
 				SaveFileDialog dialog = new SaveFileDialog();
 				dialog.Title = "Save file as...";
 				dialog.Filter = "JPEG files (*.jpg)|*.jpg|PNG files (*.png)|*.png|All files (*.*)|*.*";
 				dialog.RestoreDirectory = false;
-				if (path != null) {
+				if (path != null)
+				{
 					String dir = System.IO.Path.GetDirectoryName(path);
-					if (System.IO.Directory.Exists(dir)) {
+					if (System.IO.Directory.Exists(dir))
+					{
 						dialog.InitialDirectory = System.IO.Path.GetDirectoryName(path);
 					}
 					dialog.FileName = System.IO.Path.GetFileName(path);
 				}
 
-				if (dialog.ShowDialog() == DialogResult.OK) {
+				if (dialog.ShowDialog() == DialogResult.OK)
+				{
 					path = dialog.FileName;
-				} else {
+				}
+				else
+				{
 					Console.WriteLine("Cancelled by user");
 					Environment.Exit(EXIT_FAILURE);
 					return;
 				}
 			}
-			if (createSaveDialog || format == null) {
+			if (createSaveDialog || format == null)
+			{
 				//overwrite format with extension
 				format = System.IO.Path.GetExtension(path).Replace(".", "");
 			}
 
 			{
 				String dir = System.IO.Path.GetDirectoryName(path);
-				if (!System.IO.Directory.Exists(dir)) {
+				if (!System.IO.Directory.Exists(dir))
+				{
 					System.IO.Directory.CreateDirectory(dir);
 				}
 			}
 
-			try {
-				if ((match = new Regex("^jpg(:([0-9]+))?$").Match(format)).Success) {
+			try
+			{
+				if ((match = new Regex("^jpg(:([0-9]+))?$").Match(format)).Success)
+				{
 					ImageCodecInfo jpgDecoder = null;
-					foreach (ImageCodecInfo codec in ImageCodecInfo.GetImageDecoders()) {
-						if (codec.FormatID == ImageFormat.Jpeg.Guid) {
+					foreach (ImageCodecInfo codec in ImageCodecInfo.GetImageDecoders())
+					{
+						if (codec.FormatID == ImageFormat.Jpeg.Guid)
+						{
 							jpgDecoder = codec;
 						}
 					}
-					if (jpgDecoder == null) {
+					if (jpgDecoder == null)
+					{
 						Console.Error.WriteLine("Failed to load JPEG decoder");
 						Environment.Exit(EXIT_FAILURE);
 						return;
 					}
 					int compressionLevel = 66;
-					if (match.Groups[2].Success) {
+					if (match.Groups[2].Success)
+					{
 						compressionLevel = Convert.ToInt32(match.Groups[2].Value);
 					}
 					System.Drawing.Imaging.Encoder encoder = Encoder.Compression;
 					EncoderParameters encoderParameters = new EncoderParameters(1);
 					encoderParameters.Param[0] = new EncoderParameter(encoder, compressionLevel);
 					image.Save(path, jpgDecoder, encoderParameters);
-				} else if (format == "png") {
+				}
+				else if (format == "png")
+				{
 					image.Save(path, ImageFormat.Png);
-				} else {
+				}
+				else
+				{
 					Console.Error.WriteLine(String.Format("Unrecognized format: {0}", format));
 					Environment.Exit(EXIT_FAILURE);
 					return;
 				}
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				Console.Error.WriteLine(String.Format("Failed to write screenshot to \"{0}\" ({1})", path, e.Message));
 				Environment.Exit(EXIT_FAILURE);
 				return;
