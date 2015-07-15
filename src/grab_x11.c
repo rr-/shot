@@ -27,9 +27,9 @@ ShotBitmap *grab_screenshot(ShotRegion *region)
             ShotPixel *pixel_out = bitmap_get_pixel(bitmap, x, y);
             assert(pixel_out);
 
-            pixel_out->red = color & 0xFF;
+            pixel_out->red = (color >> 16) & 0xFF;
             pixel_out->green = (color >> 8) & 0xFF;
-            pixel_out->blue = (color >> 16) & 0xFF;
+            pixel_out->blue = color & 0xFF;
         }
     }
 
