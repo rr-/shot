@@ -49,6 +49,12 @@ def configure_packages(ctx):
         uselib_store = 'LIBX11',
         mandatory = False)
 
+    ctx.check_cfg(
+        package = 'xrandr',
+        args = '--cflags --libs',
+        uselib_store = 'LIBXRANDR',
+        mandatory = False)
+
     ctx.check(
         lib = 'gdi32',
         args = '--cflags --libs',
@@ -79,7 +85,7 @@ def build(ctx):
         ctx.objects(
             source = x11_sources,
             target = 'shot_x11',
-            use = [ 'LIBX11' ])
+            use = [ 'LIBX11', 'LIBXRANDR' ])
 
     if ctx.env.HAVE_GDI32:
         ctx.objects(

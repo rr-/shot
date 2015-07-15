@@ -5,10 +5,14 @@
 #include <string.h>
 #include <time.h>
 #include "grab.h"
+#include "monitor.h"
+
+const int MODE_DESKTOP = 0;
 
 struct ShotOptions
 {
     int error;
+    int mode;
     const char *output_path;
 };
 
@@ -22,6 +26,7 @@ static struct ShotOptions parse_options(int argc, char **argv)
     struct ShotOptions options;
     options.error = 0;
     options.output_path = NULL;
+    options.mode = MODE_DESKTOP;
 
     const char *short_opt = "ho:";
     struct option long_opt[] =
@@ -100,11 +105,30 @@ int main(int argc, char **argv)
     if (!options.output_path)
         options.output_path = get_random_name();
 
-    ShotRegion region;
-    region.x = 5;
-    region.y = 10;
-    region.width = 200;
-    region.height = 100;
+    ShotRegion region =
+    {
+        .x = 0,
+        .y = 0,
+        .width = 0,
+        .height = 0,
+    };
+
+    if (options.mode == MODE_DESKTOP)
+    {
+        for (size_t i = 0; i < monitor_count(); i++)
+        {
+            Monitor *monitor = monitor_get(i);
+            if (monitor->x < region.x)
+                region.x = monitor->x;
+            if (monitor->y < region.y)
+                region.y = monitor->y;
+            if (monitor->x + monitor->width > region.width)
+                region.width = monitor->x + monitor->width;
+            if (monitor->y + monitor->height > region.height)
+                region.height = monitor->y + monitor->height;
+            monitor_destroy(monitor);
+        }
+    }
 
     ShotBitmap *bitmap = grab_screenshot(&region);
     assert(bitmap);
