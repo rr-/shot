@@ -34,5 +34,6 @@ ShotBitmap *grab_screenshot(ShotRegion *region)
     }
 
     XDestroyImage(image);
+    XCloseDisplay(display);
     return bitmap;
 }
