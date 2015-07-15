@@ -37,30 +37,57 @@ def configure_flags(ctx):
         Logs.info('Debug information disabled, pass -d to enable')
 
 def configure_packages(ctx):
-    ctx.check_cc(
-        lib = ['png'],
-        header_name = 'png.h',
+    ctx.check_cfg(
+        package = 'libpng',
+        args = '--cflags --libs',
         uselib_store = 'LIBPNG',
         mandatory = True)
 
-    ctx.check_cc(
-        lib = ['X11'],
-        header_name = 'X11/Xlib.h',
+    ctx.check_cfg(
+        package = 'x11',
+        args = '--cflags --libs',
         uselib_store = 'LIBX11',
-        mandatory = True)
+        mandatory = False)
+
+    ctx.check(
+        lib = 'gdi32',
+        args = '--cflags --libs',
+        uselib_store = 'LIBGDI32',
+        define_name = 'HAVE_GDI32',
+        mandatory = False)
 
 def configure(ctx):
     configure_flags(ctx)
     configure_packages(ctx)
 
 def build(ctx):
-    ctx.env.DEFINES = [ 'SHOT_VERSION="' + VERSION_LONG + '"' ]
+    ctx.env.DEFINES += [ 'SHOT_VERSION="' + VERSION_LONG + '"' ]
 
-    sources = ctx.path.ant_glob('src/**/*.c')
+    #work around waf inconsistencies (#1600)
+    for define in [d for d in ctx.env.DEFINES if d.startswith('HAVE_')]:
+        key, value = define.split('=')
+        ctx.env[key] = int(value)
+
+    all_sources = ctx.path.ant_glob('src/**/*.c')
+    x11_sources = ctx.path.ant_glob('src/**/*x11.c')
+    win_sources = ctx.path.ant_glob('src/**/*win.c')
+    sources = list(set(all_sources) - set(x11_sources) - set(win_sources))
+
     path_to_src = ctx.path.find_node('src').abspath()
+
+    if ctx.env.HAVE_X11:
+        ctx.objects(
+            source = x11_sources,
+            target = 'shot_x11',
+            use = [ 'LIBX11' ])
+
+    if ctx.env.HAVE_GDI32:
+        ctx.objects(
+            source = win_sources,
+            target = 'shot_win',
+            use = [ 'LIBGDI32' ])
 
     ctx.program(
         source = sources,
         target = 'shot',
-        cflags = ['-iquote', path_to_src],
-        use = [ 'LIBPNG', 'LIBX11' ])
+        use = [ 'shot_x11', 'shot_win', 'LIBPNG' ])
