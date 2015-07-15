@@ -10,14 +10,16 @@ Make screenshots with friendly CLI.
 1. Windows support
 2. Linux (X11) support
 
+---
+
 ### Compiling for GNU/Linux
 
 1. Install libpng.
 2. Run following:
 
-    ./bootstrap
-    ./waf configure
-    ./waf
+        ./bootstrap
+        ./waf configure
+        ./waf
 
 ### Cross compiling for Windows
 
