@@ -22,18 +22,19 @@ def options(ctx):
         help = 'enable emitting debug information')
 
 def configure_flags(ctx):
+    ctx.load('compiler_c')
+
     ctx.env.CFLAGS = [
+        '-std=c99',
         '-Wall',
         '-Wextra',
-        '-pedantic']
+        '-pedantic-errors']
 
     if ctx.options.debug:
         ctx.env.CFLAGS += ['-g']
         Logs.info('Debug information enabled')
     else:
         Logs.info('Debug information disabled, pass -d to enable')
-
-    ctx.load('compiler_c')
 
 def configure_packages(ctx):
     ctx.check_cc(
