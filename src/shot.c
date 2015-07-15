@@ -1,6 +1,9 @@
 #include <assert.h>
 #include <getopt.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include "grab.h"
 
 struct ShotOptions
@@ -63,6 +66,30 @@ static struct ShotOptions parse_options(int argc, char **argv)
     return options;
 }
 
+static const char *get_random_name()
+{
+    time_t t = time(NULL);
+    struct tm *tmp = localtime(&t);
+    assert(tmp);
+
+    char time_str[20];
+    strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", tmp);
+
+    static char name[30];
+    strcpy(name, time_str);
+    strcat(name, "_");
+
+    srand(t);
+    for (int i = 0; i < 3; i++)
+    {
+        char random_char = 'a' + rand() % ('z' + 1 - 'a');
+        strncat(name, &random_char, 1);
+    }
+
+    strcat(name, ".png");
+    return name;
+}
+
 int main(int argc, char **argv)
 {
     struct ShotOptions options = parse_options(argc, argv);
@@ -71,7 +98,7 @@ int main(int argc, char **argv)
         return options.error;
 
     if (!options.output_path)
-        return 1;
+        options.output_path = get_random_name();
 
     ShotRegion region;
     region.x = 5;
