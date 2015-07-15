@@ -75,7 +75,7 @@ def build(ctx):
 
     path_to_src = ctx.path.find_node('src').abspath()
 
-    if ctx.env.HAVE_X11:
+    if ctx.env.HAVE_LIBX11:
         ctx.objects(
             source = x11_sources,
             target = 'shot_x11',
