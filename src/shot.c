@@ -8,12 +8,14 @@
 #include "monitor.h"
 
 const int MODE_DESKTOP = 0;
+const int MODE_REGION = 1;
 
 struct ShotOptions
 {
     int error;
     int mode;
     const char *output_path;
+    const char *region_string;
 };
 
 static void show_usage()
@@ -28,12 +30,14 @@ static struct ShotOptions parse_options(int argc, char **argv)
     options.output_path = NULL;
     options.mode = MODE_DESKTOP;
 
-    const char *short_opt = "ho:";
+    const char *short_opt = "ho:r:d";
     struct option long_opt[] =
     {
-        {"help",   no_argument,       NULL, 'h'},
-        {"output", required_argument, NULL, 'o'},
-        {NULL,     0,                 NULL, 0}
+        {"help",    no_argument,       NULL, 'h'},
+        {"output",  required_argument, NULL, 'o'},
+        {"region",  required_argument, NULL, 'r'},
+        {"desktop", no_argument,       NULL, 'd'},
+        {NULL,      0,                 NULL, 0}
     };
 
     int c;
@@ -52,6 +56,16 @@ static struct ShotOptions parse_options(int argc, char **argv)
             case 'h':
                 show_usage();
                 options.error = -1;
+                break;
+
+            case 'd':
+                options.mode = MODE_DESKTOP;
+                options.region_string = NULL;
+                break;
+
+            case 'r':
+                options.mode = MODE_REGION;
+                options.region_string = optarg;
                 break;
 
             case ':':
@@ -127,6 +141,19 @@ int main(int argc, char **argv)
             if (monitor->y + monitor->height > region.height)
                 region.height = monitor->y + monitor->height;
             monitor_destroy(monitor);
+        }
+    }
+    else if (options.mode == MODE_REGION)
+    {
+        if (fill_region_from_string(options.region_string, &region))
+        {
+            fprintf(stderr, "Invalid region string.\n");
+            return 1;
+        }
+        if (!region.width || !region.height)
+        {
+            fprintf(stderr, "Cannot take screenshot with 0 width or height.\n");
+            return 1;
         }
     }
 
