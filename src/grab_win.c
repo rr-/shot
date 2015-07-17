@@ -22,17 +22,18 @@ ShotBitmap *grab_screenshot(ShotRegion *region)
     GetObject(hbitmap, sizeof(BITMAP), &bitmap);
     assert(bitmap.bmBitsPixel == 32);
 
-    size_t scanline_len = bitmap.bmWidth * bitmap.bmBitsPixel;
-    size_t data_len = scanline_len * bitmap.bmHeight;
     BITMAPINFO bitmap_info;
     bitmap_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bitmap_info.bmiHeader.biWidth = bitmap.bmWidth;
     bitmap_info.bmiHeader.biHeight = bitmap.bmHeight;
     bitmap_info.bmiHeader.biPlanes = 1;
     bitmap_info.bmiHeader.biBitCount = 24;
-    bitmap_info.bmiHeader.biCompression = 0;
+    bitmap_info.bmiHeader.biCompression = BI_RGB;
 
-    data = malloc(data_len);
+    int scanline_size = region->width * 3;
+    while (scanline_size % 4 != 0)
+        scanline_size++;
+    data = malloc(scanline_size * bitmap.bmHeight);
     if (!data)
         goto err;
 
@@ -41,13 +42,14 @@ ShotBitmap *grab_screenshot(ShotRegion *region)
     if (!result)
         goto err;
 
+    assert(bitmap_info.bmiHeader.biBitCount == 24);
+
     bitmap_out = bitmap_create(region->width, region->height);
     assert(bitmap_out);
 
-    char *data_ptr = data;
-    assert(data_len >= 3 * region->height * region->width);
     for (unsigned int y = 0; y < region->height; y++)
     {
+        char *data_ptr = data + y * scanline_size;
         for (unsigned int x = 0; x < region->width; x++)
         {
             ShotPixel *pixel = bitmap_get_pixel(
