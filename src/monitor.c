@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "monitor.h"
 
-Monitor *monitor_create(size_t x, size_t y, size_t width, size_t height)
+Monitor *monitor_create(int x, int y, unsigned int width, unsigned int height)
 {
     Monitor *monitor = malloc(sizeof(Monitor));
     assert(monitor);

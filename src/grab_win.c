@@ -46,9 +46,9 @@ ShotBitmap *grab_screenshot(ShotRegion *region)
 
     char *data_ptr = data;
     assert(data_len >= 3 * region->height * region->width);
-    for (size_t y = 0; y < region->height; y++)
+    for (unsigned int y = 0; y < region->height; y++)
     {
-        for (size_t x = 0; x < region->width; x++)
+        for (unsigned int x = 0; x < region->width; x++)
         {
             ShotPixel *pixel = bitmap_get_pixel(
                 bitmap_out, x, region->height - 1 - y);

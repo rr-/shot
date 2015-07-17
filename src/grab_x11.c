@@ -19,9 +19,9 @@ ShotBitmap *grab_screenshot(ShotRegion *region)
     ShotBitmap *bitmap = bitmap_create(region->width, region->height);
     assert(bitmap);
 
-    for (size_t y = 0; y < bitmap->height; y++)
+    for (unsigned int y = 0; y < region->height; y++)
     {
-        for (size_t x = 0; x < bitmap->width; x++)
+        for (unsigned int x = 0; x < region->width; x++)
         {
             uint32_t color = XGetPixel(image, x, y);
             ShotPixel *pixel_out = bitmap_get_pixel(bitmap, x, y);

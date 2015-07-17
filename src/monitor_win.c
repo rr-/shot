@@ -17,7 +17,7 @@ BOOL CALLBACK count_cb(HMONITOR hmonitor, HDC hdc, LPRECT rect, LPARAM data)
     UNUSED(hdc);
     UNUSED(rect);
 
-    size_t *count = (size_t*)data;
+    unsigned int *count = (unsigned int*)data;
     assert(count);
     (*count)++;
     return TRUE;
@@ -45,14 +45,14 @@ BOOL CALLBACK fetch_cb(HMONITOR hmonitor, HDC hdc, LPRECT rect, LPARAM data)
     return TRUE;
 }
 
-size_t monitor_count()
+unsigned int monitor_count()
 {
-    size_t count = 0;
+    unsigned int count = 0;
     EnumDisplayMonitors(0, NULL, count_cb, (LPARAM)&count);
     return count;
 }
 
-Monitor *monitor_get(size_t n)
+Monitor *monitor_get(unsigned int n)
 {
     struct FetchData fetch_data =
     {

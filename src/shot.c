@@ -26,24 +26,24 @@ static void show_usage_hint(const char *program_name)
 
 static void get_desktop_region(ShotRegion *region)
 {
-    size_t count = monitor_count();
+    unsigned int count = monitor_count();
     Monitor **monitors = (Monitor**)malloc(monitor_count());
     assert(monitors);
-    for (size_t i = 0; i < count; i++)
+    for (unsigned int i = 0; i < count; i++)
     {
         monitors[i] = monitor_get(i);
         assert(monitors[i]);
     }
 
-    size_t min_x = monitors[0]->x;
-    size_t min_y = monitors[0]->y;
-    for (size_t i = 1; i < monitor_count(); i++)
+    int min_x = monitors[0]->x;
+    int min_y = monitors[0]->y;
+    for (unsigned int i = 1; i < monitor_count(); i++)
     {
         if (!i || monitors[i]->x < min_x) min_x = monitors[i]->x;
         if (!i || monitors[i]->y < min_y) min_y = monitors[i]->y;
     }
 
-    for (size_t i = 0; i < count; i++)
+    for (unsigned int i = 0; i < count; i++)
     {
         ShotRegion pr =
         {
@@ -58,19 +58,19 @@ static void get_desktop_region(ShotRegion *region)
         if (!i || pr.height > region->height) region->height = pr.height;
     }
 
-    for (size_t i = 0; i < count; i++)
+    for (unsigned int i = 0; i < count; i++)
         monitor_destroy(monitors[i]);
     free(monitors);
 }
 
-static int get_monitor_region(ShotRegion *region, size_t monitor_number)
+static int get_monitor_region(ShotRegion *region, unsigned int monitor_number)
 {
     Monitor *monitor = monitor_get(monitor_number);
     if (!monitor)
     {
         fprintf(
             stderr,
-            "Invalid monitor number. Valid monitor numbers = 0..%zd\n",
+            "Invalid monitor number. Valid monitor numbers = 0..%d\n",
             monitor_count() - 1);
         return 1;
     }

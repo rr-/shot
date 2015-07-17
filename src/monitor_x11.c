@@ -3,16 +3,16 @@
 #include <X11/extensions/Xrandr.h>
 #include "monitor.h"
 
-size_t monitor_count()
+unsigned int monitor_count()
 {
     Display *display = XOpenDisplay(NULL);
     assert(display);
-    size_t ret = XScreenCount(display);
+    unsigned int ret = XScreenCount(display);
     XCloseDisplay(display);
     return ret;
 }
 
-Monitor *monitor_get(size_t n)
+Monitor *monitor_get(unsigned int n)
 {
     Display *display = XOpenDisplay(NULL);
     assert(display);

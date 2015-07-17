@@ -12,13 +12,13 @@ typedef struct
 typedef struct
 {
     ShotPixel *pixels;
-    size_t width;
-    size_t height;
+    unsigned int width;
+    unsigned int height;
 } ShotBitmap;
 
-ShotBitmap *bitmap_create(size_t width, size_t height);
+ShotBitmap *bitmap_create(unsigned int width, unsigned int height);
 void bitmap_destroy(ShotBitmap *bitmap);
-ShotPixel *bitmap_get_pixel(ShotBitmap *bitmap, size_t x, size_t y);
+ShotPixel *bitmap_get_pixel(ShotBitmap *bitmap, unsigned int x, unsigned int y);
 int bitmap_save_to_png(ShotBitmap *bitmap, const char *path);
 
 #endif

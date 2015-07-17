@@ -4,8 +4,8 @@
 
 typedef struct
 {
-    size_t x, y;
-    size_t width, height;
+    int x, y;
+    unsigned int width, height;
 } ShotRegion;
 
 int fill_region_from_string(const char *str, ShotRegion *r);

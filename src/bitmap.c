@@ -3,7 +3,7 @@
 #include <png.h>
 #include "bitmap.h"
 
-ShotBitmap *bitmap_create(size_t width, size_t height)
+ShotBitmap *bitmap_create(unsigned int width, unsigned int height)
 {
     ShotBitmap *bitmap = malloc(sizeof(ShotBitmap));
     bitmap->width = width;
@@ -19,7 +19,7 @@ void bitmap_destroy(ShotBitmap *bitmap)
     free(bitmap);
 }
 
-ShotPixel *bitmap_get_pixel(ShotBitmap *bitmap, size_t x, size_t y)
+ShotPixel *bitmap_get_pixel(ShotBitmap *bitmap, unsigned int x, unsigned int y)
 {
     return &bitmap->pixels[bitmap->width * y + x];
 }
@@ -57,11 +57,11 @@ int bitmap_save_to_png(ShotBitmap *bitmap, const char *path)
 
     png_byte **row_pointers =
         png_malloc(png_ptr, bitmap->height * sizeof(png_byte*));
-    for (size_t y = 0; y < bitmap->height; y++)
+    for (unsigned int y = 0; y < bitmap->height; y++)
     {
         png_byte *row = png_malloc(png_ptr, bitmap->width * 3); //channels
         row_pointers[y] = row;
-        for (size_t x = 0; x < bitmap->width; x++)
+        for (unsigned int x = 0; x < bitmap->width; x++)
         {
             ShotPixel *pixel = bitmap_get_pixel(bitmap, x, y);
             *row++ = pixel->red;
@@ -75,7 +75,7 @@ int bitmap_save_to_png(ShotBitmap *bitmap, const char *path)
     png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
     status = 0;
-    for (size_t y = 0; y < bitmap->height; y++)
+    for (unsigned int y = 0; y < bitmap->height; y++)
         png_free(png_ptr, row_pointers[y]);
     png_free(png_ptr, row_pointers);
 

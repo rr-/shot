@@ -4,15 +4,15 @@
 
 typedef struct
 {
-    size_t x, y;
-    size_t width, height;
+    int x, y;
+    unsigned int width, height;
 } Monitor;
 
-Monitor *monitor_create(size_t x, size_t y, size_t width, size_t height);
+Monitor *monitor_create(int x, int y, unsigned int width, unsigned int height);
 
 void monitor_destroy(Monitor *monitor);
 
-Monitor *monitor_get(size_t n);
-size_t monitor_count();
+Monitor *monitor_get(unsigned int n);
+unsigned int monitor_count();
 
 #endif
