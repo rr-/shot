@@ -12,13 +12,10 @@ unsigned int monitor_count()
     return ret;
 }
 
-Monitor *monitor_get(unsigned int n)
+Monitor *monitor_get_impl(unsigned int n)
 {
     Display *display = XOpenDisplay(NULL);
     assert(display);
-
-    if ((int)n >= XScreenCount(display))
-        return NULL;
 
     XRRScreenResources *screen =
         XRRGetScreenResources(display, DefaultRootWindow(display));

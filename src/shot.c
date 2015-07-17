@@ -67,13 +67,7 @@ static int get_monitor_region(ShotRegion *region, unsigned int monitor_number)
 {
     Monitor *monitor = monitor_get(monitor_number);
     if (!monitor)
-    {
-        fprintf(
-            stderr,
-            "Invalid monitor number. Valid monitor numbers = 0..%d\n",
-            monitor_count() - 1);
         return 1;
-    }
     region->x = monitor->x;
     region->y = monitor->y;
     region->width = monitor->width;

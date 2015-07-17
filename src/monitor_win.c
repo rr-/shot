@@ -52,7 +52,7 @@ unsigned int monitor_count()
     return count;
 }
 
-Monitor *monitor_get(unsigned int n)
+Monitor *monitor_get_impl(unsigned int n)
 {
     struct FetchData fetch_data =
     {
@@ -60,9 +60,6 @@ Monitor *monitor_get(unsigned int n)
         .monitor_to_fetch = n,
         .current = 0,
     };
-
-    if (n >= monitor_count())
-        return NULL;
 
     EnumDisplayMonitors(0, NULL, fetch_cb, (LPARAM)&fetch_data);
     assert(fetch_data.monitor);
