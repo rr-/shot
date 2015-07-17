@@ -7,28 +7,63 @@
 #include "grab.h"
 #include "monitor.h"
 
-const int MODE_DESKTOP = 0;
-const int MODE_REGION = 1;
-
 struct ShotOptions
 {
     int error;
-    int mode;
     const char *output_path;
-    const char *region_string;
+    ShotRegion region;
 };
 
-static void show_usage()
+static void show_usage(void)
 {
     printf("usage...\n");
 }
 
+static void show_usage_hint(const char *program_name)
+{
+    fprintf(stderr, "Try '%s --help' for more information.\n", program_name);
+}
+
+static void get_desktop_region(ShotRegion *region)
+{
+    region->x = 0;
+    region->y = 0;
+    region->width = 0;
+    region->height = 0;
+    for (size_t i = 0; i < monitor_count(); i++)
+    {
+        Monitor *monitor = monitor_get(i);
+        assert(monitor);
+        if (monitor->x < region->x)
+            region->x = monitor->x;
+        if (monitor->y < region->y)
+            region->y = monitor->y;
+        if (monitor->x + monitor->width > region->width)
+            region->width = monitor->x + monitor->width;
+        if (monitor->y + monitor->height > region->height)
+            region->height = monitor->y + monitor->height;
+        monitor_destroy(monitor);
+    }
+}
+
+static int get_string_region(ShotRegion *region, const char *string)
+{
+    if (fill_region_from_string(string, region))
+    {
+        fprintf(stderr, "Invalid region string.\n");
+        return 1;
+    }
+    return 0;
+}
+
 static struct ShotOptions parse_options(int argc, char **argv)
 {
-    struct ShotOptions options;
-    options.error = 0;
-    options.output_path = NULL;
-    options.mode = MODE_DESKTOP;
+    struct ShotOptions options =
+    {
+        .error = 0,
+        .output_path = NULL,
+    };
+    get_desktop_region(&options.region);
 
     const char *short_opt = "ho:r:d";
     struct option long_opt[] =
@@ -59,24 +94,26 @@ static struct ShotOptions parse_options(int argc, char **argv)
                 break;
 
             case 'd':
-                options.mode = MODE_DESKTOP;
-                options.region_string = NULL;
+                get_desktop_region(&options.region);
                 break;
 
             case 'r':
-                options.mode = MODE_REGION;
-                options.region_string = optarg;
+                if (get_string_region(&options.region, optarg))
+                {
+                    show_usage_hint(argv[0]);
+                    options.error = 1;
+                }
                 break;
 
             case ':':
             case '?':
-                fprintf(stderr, "Try '%s --help' for more information.\n", argv[0]);
+                show_usage_hint(argv[0]);
                 options.error = 1;
                 break;
 
             default:
                 fprintf(stderr, "%s: invalid option -- '%c'\n", argv[0], c);
-                fprintf(stderr, "Try '%s --help' for more information.\n", argv[0]);
+                show_usage_hint(argv[0]);
                 options.error = 1;
                 break;
         }
@@ -119,45 +156,13 @@ int main(int argc, char **argv)
     if (!options.output_path)
         options.output_path = get_random_name();
 
-    ShotRegion region =
+    if (!options.region.width || !options.region.height)
     {
-        .x = 0,
-        .y = 0,
-        .width = 0,
-        .height = 0,
-    };
-
-    if (options.mode == MODE_DESKTOP)
-    {
-        for (size_t i = 0; i < monitor_count(); i++)
-        {
-            Monitor *monitor = monitor_get(i);
-            if (monitor->x < region.x)
-                region.x = monitor->x;
-            if (monitor->y < region.y)
-                region.y = monitor->y;
-            if (monitor->x + monitor->width > region.width)
-                region.width = monitor->x + monitor->width;
-            if (monitor->y + monitor->height > region.height)
-                region.height = monitor->y + monitor->height;
-            monitor_destroy(monitor);
-        }
-    }
-    else if (options.mode == MODE_REGION)
-    {
-        if (fill_region_from_string(options.region_string, &region))
-        {
-            fprintf(stderr, "Invalid region string.\n");
-            return 1;
-        }
-        if (!region.width || !region.height)
-        {
-            fprintf(stderr, "Cannot take screenshot with 0 width or height.\n");
-            return 1;
-        }
+        fprintf(stderr, "Cannot take screenshot with 0 width or height.\n");
+        return 1;
     }
 
-    ShotBitmap *bitmap = grab_screenshot(&region);
+    ShotBitmap *bitmap = grab_screenshot(&options.region);
     assert(bitmap);
     bitmap_save_to_png(bitmap, options.output_path);
     bitmap_destroy(bitmap);
