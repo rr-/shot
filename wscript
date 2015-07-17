@@ -81,17 +81,16 @@ def build(ctx):
 
     path_to_src = ctx.path.find_node('src').abspath()
 
-    if ctx.env.HAVE_LIBX11:
-        ctx.objects(
-            source = x11_sources,
-            target = 'shot_x11',
-            use = [ 'LIBX11', 'LIBXRANDR' ])
-
     if ctx.env.HAVE_GDI32:
         ctx.objects(
             source = win_sources,
             target = 'shot_win',
             use = [ 'LIBGDI32' ])
+    elif ctx.env.HAVE_LIBX11:
+        ctx.objects(
+            source = x11_sources,
+            target = 'shot_x11',
+            use = [ 'LIBX11', 'LIBXRANDR' ])
 
     ctx.program(
         source = sources,
