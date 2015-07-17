@@ -46,6 +46,25 @@ static void get_desktop_region(ShotRegion *region)
     }
 }
 
+static int get_monitor_region(ShotRegion *region, size_t monitor_number)
+{
+    Monitor *monitor = monitor_get(monitor_number);
+    if (!monitor)
+    {
+        fprintf(
+            stderr,
+            "Invalid monitor number. Valid monitor numbers = 0..%zd\n",
+            monitor_count() - 1);
+        return 1;
+    }
+    region->x = monitor->x;
+    region->y = monitor->y;
+    region->width = monitor->width;
+    region->height = monitor->height;
+    monitor_destroy(monitor);
+    return 0;
+}
+
 static int get_string_region(ShotRegion *region, const char *string)
 {
     if (fill_region_from_string(string, region))
@@ -71,6 +90,7 @@ static struct ShotOptions parse_options(int argc, char **argv)
         {"help",    no_argument,       NULL, 'h'},
         {"output",  required_argument, NULL, 'o'},
         {"region",  required_argument, NULL, 'r'},
+        {"monitor", required_argument, NULL, 'm'},
         {"desktop", no_argument,       NULL, 'd'},
         {NULL,      0,                 NULL, 0}
     };
@@ -95,6 +115,14 @@ static struct ShotOptions parse_options(int argc, char **argv)
 
             case 'd':
                 get_desktop_region(&options.region);
+                break;
+
+            case 'm':
+                if (get_monitor_region(&options.region, atoi(optarg)))
+                {
+                    show_usage_hint(argv[0]);
+                    options.error = 1;
+                }
                 break;
 
             case 'r':
