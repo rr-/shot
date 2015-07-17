@@ -9,10 +9,6 @@ typedef struct
 } Monitor;
 
 Monitor *monitor_create(int x, int y, unsigned int width, unsigned int height);
-
 void monitor_destroy(Monitor *monitor);
-
-Monitor *monitor_get(unsigned int n);
-unsigned int monitor_count();
 
 #endif
