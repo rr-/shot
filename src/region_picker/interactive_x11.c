@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "region_picker/interactive.h"
 
 void make_floating(Display *display, Window win)
@@ -280,6 +281,13 @@ int update_region_interactively(ShotRegion *region)
     XDestroyWindow(display, win);
     XSync(display, True);
     XCloseDisplay(display);
+
+    // wait til window is actually hidden, vsync redraws things, and
+    // hypothetical compiz or other eyecandy draw their fadeout effects
+    struct timespec tim, tim2;
+    tim.tv_sec = 0;
+    tim.tv_nsec = 5e8;
+    nanosleep(&tim , &tim2);
 
     return canceled ? 1 : 0;
 }

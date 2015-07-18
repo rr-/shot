@@ -70,6 +70,7 @@ def build(ctx):
     path_to_src = ctx.path.find_node('src').abspath()
 
     ctx.env.DEFINES += [ 'SHOT_VERSION="' + VERSION_LONG + '"' ]
+    ctx.env.DEFINES += ['_POSIX_C_SOURCE=200809L' ]
     ctx.env.CFLAGS += ['-iquote', path_to_src]
 
     #work around waf inconsistencies (#1600)
