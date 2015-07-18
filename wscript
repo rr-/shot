@@ -67,7 +67,10 @@ def configure(ctx):
     configure_packages(ctx)
 
 def build(ctx):
+    path_to_src = ctx.path.find_node('src').abspath()
+
     ctx.env.DEFINES += [ 'SHOT_VERSION="' + VERSION_LONG + '"' ]
+    ctx.env.CFLAGS += ['-iquote', path_to_src]
 
     #work around waf inconsistencies (#1600)
     for define in [d for d in ctx.env.DEFINES if d.startswith('HAVE_')]:
@@ -78,8 +81,6 @@ def build(ctx):
     x11_sources = ctx.path.ant_glob('src/**/*x11.c')
     win_sources = ctx.path.ant_glob('src/**/*win.c')
     sources = list(set(all_sources) - set(x11_sources) - set(win_sources))
-
-    path_to_src = ctx.path.find_node('src').abspath()
 
     if ctx.env.HAVE_GDI32:
         ctx.objects(

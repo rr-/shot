@@ -13,7 +13,7 @@ static int int_from_string(const char **str)
     return ret;
 }
 
-int fill_region_from_string(const char *str, ShotRegion *r)
+int update_region_from_string(ShotRegion *r, const char *str)
 {
     ShotRegion tmp;
     tmp.width = 100;

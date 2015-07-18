@@ -8,9 +8,10 @@ Make screenshots with friendly CLI.
 ### Features
 
 1. Windows support
-2. Linux support (X11 + Xrandr)
+2. GNU/Linux support (X11 + XRandR)
 3. Taking screenshots of the whole desktop
-4. Taking screenshots of specified region
+4. Taking screenshots of specific monitor
+5. Taking screenshots of specific region
 
 ---
 
