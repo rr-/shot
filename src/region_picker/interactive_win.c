@@ -44,7 +44,7 @@ static void pull_window_rect(struct private *p)
     p->height = rect.bottom - rect.top;
 }
 
-static void sync_window_rect(struct private *p)
+static void sync_window_rect(const struct private *p)
 {
     assert(p);
     MoveWindow(p->hwnd, p->x, p->y, p->width, p->height, TRUE);
@@ -134,14 +134,14 @@ static void handle_key_up(struct private *p, WPARAM key)
             break;
 
         case VK_RETURN:
-            p->canceled = 0;
+            p->canceled = -1;
             ShowWindow(p->hwnd, SW_HIDE);
             PostQuitMessage(0);
             break;
     }
 }
 
-static void handle_button_down(
+static void handle_mouse_down(
     struct private *p, int button, int mouse_x, int mouse_y)
 {
     assert(p);
@@ -170,7 +170,7 @@ static void handle_button_down(
     }
 }
 
-static void handle_button_up(struct private *p)
+static void handle_mouse_up(struct private *p)
 {
     assert(p);
     p->window_state.resizing_x = 0;
@@ -249,16 +249,16 @@ static LRESULT CALLBACK wnd_proc(
             break;
 
         case WM_LBUTTONDOWN:
-            handle_button_down(p, VK_LBUTTON, LOWORD(lparam), HIWORD(lparam));
+            handle_mouse_down(p, VK_LBUTTON, LOWORD(lparam), HIWORD(lparam));
             break;
 
         case WM_RBUTTONDOWN:
-            handle_button_down(p, VK_RBUTTON, LOWORD(lparam), HIWORD(lparam));
+            handle_mouse_down(p, VK_RBUTTON, LOWORD(lparam), HIWORD(lparam));
             break;
 
         case WM_LBUTTONUP:
         case WM_RBUTTONUP:
-            handle_button_up(p);
+            handle_mouse_up(p);
             break;
 
         case WM_MOUSEMOVE:
@@ -299,18 +299,14 @@ static int register_class(
     return 0;
 }
 
-static int create_window(
-    const char *class_name,
-    const char *title,
-    const struct private *p,
-    HWND *hwnd_out)
+static int init_window(
+    const char *class_name, const char *title, struct private *p)
 {
     assert(class_name);
     assert(title);
     assert(p);
-    assert(hwnd_out);
 
-    *hwnd_out = CreateWindowEx(
+    p->hwnd = CreateWindowEx(
         WS_EX_TOOLWINDOW | WS_EX_LAYERED,
         class_name,
         title,
@@ -318,16 +314,27 @@ static int create_window(
         p->x, p->y, p->width, p->height,
         NULL, NULL, 0, NULL);
 
-    if (!*hwnd_out)
+    if (!p->hwnd)
     {
         fprintf(stderr, "Failed to create a window\n");
         return -1;
     }
 
-    SetLayeredWindowAttributes(*hwnd_out,  0, 0.5f * 255, LWA_ALPHA);
-
-    SetWindowLongPtr(*hwnd_out, GWLP_USERDATA, (long)p);
+    SetLayeredWindowAttributes(p->hwnd,  0, 0.5f * 255, LWA_ALPHA);
+    SetWindowLongPtr(p->hwnd, GWLP_USERDATA, (long)p);
+    ShowWindow(p->hwnd, SW_SHOWNORMAL);
+    UpdateWindow(p->hwnd);
     return 0;
+}
+
+static void run_event_loop(struct private *p)
+{
+    MSG Msg;
+    while (!p->canceled && GetMessage(&Msg, NULL, 0, 0) > 0)
+    {
+        TranslateMessage(&Msg);
+        DispatchMessage(&Msg);
+    }
 }
 
 int update_region_interactively(ShotRegion *region)
@@ -356,19 +363,12 @@ int update_region_interactively(ShotRegion *region)
     p.x = (GetSystemMetrics(SM_CXSCREEN) - p.width) / 2;
     p.y = (GetSystemMetrics(SM_CYSCREEN) - p.height) / 2;
 
-    if (create_window(class_name, "shot", &p, &p.hwnd))
+    if (init_window(class_name, "shot", &p))
         return -1;
-    ShowWindow(p.hwnd, SW_SHOWNORMAL);
-    UpdateWindow(p.hwnd);
 
-    MSG Msg;
-    while (GetMessage(&Msg, NULL, 0, 0) > 0)
-    {
-        TranslateMessage(&Msg);
-        DispatchMessage(&Msg);
-    }
+    run_event_loop(&p);
 
-    if (p.canceled)
+    if (p.canceled == 1)
         return 1;
 
     //wait for window close, vsync and other blows and whistles
