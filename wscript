@@ -41,18 +41,21 @@ def configure_packages(ctx):
         package = 'libpng',
         args = '--cflags --libs',
         uselib_store = 'LIBPNG',
+        global_define = True,
         mandatory = True)
 
     ctx.check_cfg(
         package = 'x11',
         args = '--cflags --libs',
         uselib_store = 'LIBX11',
+        global_define = True,
         mandatory = False)
 
     ctx.check_cfg(
         package = 'xrandr',
         args = '--cflags --libs',
         uselib_store = 'LIBXRANDR',
+        global_define = True,
         mandatory = False)
 
     ctx.check(
@@ -69,15 +72,11 @@ def configure(ctx):
 def build(ctx):
     path_to_src = ctx.path.find_node('src').abspath()
 
-    #work around waf inconsistencies (#1600)
-    for define in [d for d in ctx.env.DEFINES if d.startswith('HAVE_')]:
-        key, value = define.split('=')
-        ctx.env[key] = int(value)
+    ctx.define('SHOT_VERSION', VERSION_LONG)
+    ctx.define('_POSIX_C_SOURCE', '200809L', False)
 
-    ctx.env.DEFINES += [ 'SHOT_VERSION="' + VERSION_LONG + '"' ]
-    ctx.env.DEFINES += ['_POSIX_C_SOURCE=200809L' ]
     ctx.env.CFLAGS += ['-iquote', path_to_src]
-    if ctx.env.HAVE_GDI32:
+    if ctx.is_defined('HAVE_GDI32'):
         ctx.env.LINKFLAGS += ['-mwindows']
 
     all_sources = ctx.path.ant_glob('src/**/*.c')
@@ -85,12 +84,12 @@ def build(ctx):
     win_sources = ctx.path.ant_glob('src/**/*win.c')
     sources = list(set(all_sources) - set(x11_sources) - set(win_sources))
 
-    if ctx.env.HAVE_GDI32:
+    if ctx.is_defined('HAVE_GDI32'):
         ctx.objects(
             source = win_sources,
             target = 'shot_win',
             use = [ 'LIBGDI32' ])
-    elif ctx.env.HAVE_LIBX11:
+    elif ctx.is_defined('HAVE_X11'):
         ctx.objects(
             source = x11_sources,
             target = 'shot_x11',
