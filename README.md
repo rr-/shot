@@ -13,6 +13,7 @@ Make screenshots with friendly CLI.
 4. Taking screenshots of specific monitor
 5. Taking screenshots of specific region (passed as string)
 6. Taking screenshots of specific region (chosen interactively)
+7. Taking screenshots of focused window
 
 ---
 
