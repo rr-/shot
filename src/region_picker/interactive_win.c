@@ -52,9 +52,23 @@ static void sync_window_rect(const struct private *p)
 
 static void update_text(struct private *p)
 {
-    assert(p);
-    (void)p;
-    //TODO...
+    RECT rect;
+    GetClientRect(p->hwnd, &rect);
+    InvalidateRect(p->hwnd, &rect, FALSE);
+}
+
+static void draw_text(struct private *p)
+{
+    char msg[100];
+    sprintf(msg, "%dx%d+%d+%d", p->width, p->height, p->x, p->y);
+
+    RECT rect;
+    GetClientRect(p->hwnd, &rect);
+    HDC wdc = GetWindowDC(p->hwnd);
+    SetTextColor(wdc, 0x00000000);
+    SetBkMode(wdc,TRANSPARENT);
+    DrawText(wdc, msg, -1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+    DeleteDC(wdc);
 }
 
 static void handle_key_down(struct private *p, WPARAM key)
@@ -228,9 +242,13 @@ static LRESULT CALLBACK wnd_proc(
         {
             RECT rect;
             GetClientRect(hwnd, &rect);
-            FillRect((HDC)wparam, &rect, CreateSolidBrush(RGB(255, 128, 0)));
+            FillRect((HDC)wparam, &rect, CreateSolidBrush(RGB(255, 200, 0)));
             break;
         }
+
+        case WM_PAINT:
+            draw_text(p);
+            break;
 
         case WM_CLOSE:
             DestroyWindow(hwnd);
