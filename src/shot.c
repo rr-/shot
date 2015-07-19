@@ -33,14 +33,25 @@ static void show_usage_hint(const char *program_name)
 static struct ShotOptions parse_options(
     int argc, char **argv, MonitorManager *monitor_mgr)
 {
+    assert(argv);
+    assert(monitor_mgr);
+    assert(monitor_mgr->monitor_count);
+
     struct ShotOptions options =
     {
         .error = 0,
         .output_path = NULL,
     };
 
-    int region_result = update_region_from_all_monitors(
-        monitor_mgr, &options.region);
+    //if user calls --interactive, it should be initialized with a 640x480
+    //window centered on the default screen
+    Monitor *m = monitor_mgr->monitors[0];
+    options.region.width = 640;
+    options.region.height = 480;
+    options.region.x = m->x + (m->width - options.region.width) / 2;
+    options.region.y = m->y + (m->height - options.region.height) / 2;
+
+    int region_result = -1;
 
     const char *short_opt = "ho:r:diw";
     struct option long_opt[] =
@@ -112,6 +123,14 @@ static struct ShotOptions parse_options(
                 options.error = 1;
                 break;
         }
+    }
+
+    //if no region was chosen in the arguments
+    if (region_result == -1)
+    {
+        //take the whole desktop
+        region_result = update_region_from_all_monitors(
+            monitor_mgr, &options.region);
     }
 
     if (region_result)

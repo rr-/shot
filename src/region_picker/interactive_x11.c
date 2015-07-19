@@ -375,11 +375,11 @@ int update_region_interactively(ShotRegion *region)
             .display = display,
         },
         .canceled = 0,
-        .width = 640,
-        .height = 480,
+        .width = region->width,
+        .height = region->height,
+        .x = region->x,
+        .y = region->y,
     };
-    p.x = (DisplayWidth(display, screen) - p.width) / 2;
-    p.y = (DisplayHeight(display, screen) - p.height) / 2;
 
     if (init_window(&p))
         return ERR_OTHER;

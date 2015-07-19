@@ -378,11 +378,11 @@ int update_region_interactively(ShotRegion *region)
             .moving = 0,
         },
         .canceled = 0,
-        .width = 640,
-        .height = 480,
+        .width = region->width,
+        .height = region->height,
+        .x = region->x,
+        .y = region->y,
     };
-    p.x = (GetSystemMetrics(SM_CXSCREEN) - p.width) / 2;
-    p.y = (GetSystemMetrics(SM_CYSCREEN) - p.height) / 2;
 
     if (init_window(class_name, "shot", &p))
         return ERR_OTHER;
