@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include "region_picker/errors.h"
 #include "region_picker/interactive.h"
 
 struct private
@@ -381,12 +382,12 @@ int update_region_interactively(ShotRegion *region)
     p.y = (DisplayHeight(display, screen) - p.height) / 2;
 
     if (init_window(&p))
-        return -1;
+        return ERR_OTHER;
     run_event_loop(&p);
     destroy_window(&p);
 
     if (p.canceled == 1)
-        return 1;
+        return ERR_CANCELED;
 
     // wait til window is actually hidden, vsync redraws things, and
     // hypothetical compiz or other eyecandy draw their fadeout effects

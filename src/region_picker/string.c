@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "region_picker/errors.h"
 #include "region.h"
 
 static int int_from_string(const char **str)
@@ -24,22 +24,22 @@ int update_region_from_string(ShotRegion *r, const char *str)
     const char *ptr = str;
     tmp.width = int_from_string(&ptr);
     if (*ptr != 'x' && *ptr != 'X')
-        return 1;
+        return ERR_INVALID_ARGUMENT;
     ptr++;
 
     tmp.height = int_from_string(&ptr);
     if (*ptr != '\0')
     {
         if (*ptr != '+')
-            return 1;
+            return ERR_INVALID_ARGUMENT;
         ptr++;
         tmp.x = int_from_string(&ptr);
         if (*ptr != '+')
-            return 1;
+            return ERR_INVALID_ARGUMENT;
         ptr++;
         tmp.y = int_from_string(&ptr);
         if (*ptr != '\0')
-            return 1;
+            return ERR_INVALID_ARGUMENT;
     }
 
     r->x = tmp.x;

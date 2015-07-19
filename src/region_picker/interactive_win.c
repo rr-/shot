@@ -1,7 +1,8 @@
 #include <assert.h>
 #include <stdio.h>
 #include <Windows.h>
-#include "interactive.h"
+#include "region_picker/errors.h"
+#include "region_picker/interactive.h"
 
 struct private
 {
@@ -361,7 +362,7 @@ int update_region_interactively(ShotRegion *region)
 {
     const char *class_name = "shot";
     if (register_class(class_name, &wnd_proc))
-        return -1;
+        return ERR_OTHER;
 
     struct private p =
     {
@@ -384,12 +385,12 @@ int update_region_interactively(ShotRegion *region)
     p.y = (GetSystemMetrics(SM_CYSCREEN) - p.height) / 2;
 
     if (init_window(class_name, "shot", &p))
-        return -1;
+        return ERR_OTHER;
 
     run_event_loop(&p);
 
     if (p.canceled == 1)
-        return 1;
+        return ERR_CANCELED;
 
     //wait for window close, vsync and other blows and whistles
     Sleep(100);

@@ -7,6 +7,7 @@
 #include "grab.h"
 #include "monitor.h"
 #include "monitor_mgr.h"
+#include "region_picker/errors.h"
 #include "region_picker/interactive.h"
 #include "region_picker/monitor.h"
 #include "region_picker/string.h"
@@ -36,7 +37,9 @@ static struct ShotOptions parse_options(
         .error = 0,
         .output_path = NULL,
     };
-    update_region_from_all_monitors(monitor_mgr, &options.region);
+
+    int region_result = update_region_from_all_monitors(
+        monitor_mgr, &options.region);
 
     const char *short_opt = "ho:r:di";
     struct option long_opt[] =
@@ -50,9 +53,12 @@ static struct ShotOptions parse_options(
         {NULL,          0,                 NULL, 0}
     };
 
-    int c;
-    while ((c = getopt_long(argc, argv, short_opt, long_opt, NULL)) != -1)
+    while (!options.error)
     {
+        int c = getopt_long(argc, argv, short_opt, long_opt, NULL);
+        if (c == -1)
+            break;
+
         switch (c)
         {
             case -1:
@@ -68,42 +74,29 @@ static struct ShotOptions parse_options(
                 options.error = -1;
                 break;
 
-            case 'd':
-                update_region_from_all_monitors(monitor_mgr, &options.region);
-                break;
-
-            case 'm':
-                if (update_region_from_monitor(
-                    monitor_mgr, &options.region, atoi(optarg)))
-                {
-                    show_usage_hint(argv[0]);
-                    options.error = 1;
-                }
-                break;
-
-            case 'r':
-                if (update_region_from_string(&options.region, optarg))
-                {
-                    fprintf(stderr, "Invalid region string.\n");
-                    show_usage_hint(argv[0]);
-                    options.error = 1;
-                }
-                break;
-
-            case 'i':
-                c = update_region_interactively(&options.region);
-                if (c)
-                {
-                    if (c == 1)
-                        fprintf(stderr, "Canceled due to user input.\n");
-                    options.error = 1;
-                }
-                break;
-
             case ':':
             case '?':
                 show_usage_hint(argv[0]);
                 options.error = 1;
+                break;
+
+            case 'd':
+                region_result = update_region_from_all_monitors(
+                    monitor_mgr, &options.region);
+                break;
+
+            case 'm':
+                region_result = update_region_from_monitor(
+                    monitor_mgr, &options.region, atoi(optarg));
+                break;
+
+            case 'r':
+                region_result = update_region_from_string(
+                    &options.region, optarg);
+                break;
+
+            case 'i':
+                region_result = update_region_interactively(&options.region);
                 break;
 
             default:
@@ -112,6 +105,28 @@ static struct ShotOptions parse_options(
                 options.error = 1;
                 break;
         }
+    }
+
+    if (region_result)
+    {
+        if (region_result == ERR_CANCELED)
+        {
+            fprintf(stderr, "Canceled due to user input.\n");
+        }
+        else if (region_result == ERR_NOT_IMPLEMENTED)
+        {
+            fprintf(stderr, "Not implemented. Sorry...\n");
+        }
+        else if (region_result == ERR_INVALID_ARGUMENT)
+        {
+            fprintf(stderr, "Invalid argument, aborting.\n");
+            show_usage_hint(argv[0]);
+        }
+        else if (region_result == ERR_OTHER)
+        {
+            fprintf(stderr, "An error occurred, aborting.\n");
+        }
+        options.error = 1;
     }
 
     return options;
