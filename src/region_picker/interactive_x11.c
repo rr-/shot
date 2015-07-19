@@ -355,7 +355,6 @@ int update_region_interactively(ShotRegion *region)
 {
     Display *display = XOpenDisplay(NULL);
     assert(display);
-    int screen = DefaultScreen(display);
 
     struct private p =
     {
