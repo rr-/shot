@@ -9,6 +9,7 @@
 #include "monitor_mgr.h"
 #include "region_picker/errors.h"
 #include "region_picker/interactive.h"
+#include "region_picker/active_window.h"
 #include "region_picker/monitor.h"
 #include "region_picker/string.h"
 
@@ -41,7 +42,7 @@ static struct ShotOptions parse_options(
     int region_result = update_region_from_all_monitors(
         monitor_mgr, &options.region);
 
-    const char *short_opt = "ho:r:di";
+    const char *short_opt = "ho:r:diw";
     struct option long_opt[] =
     {
         {"help",        no_argument,       NULL, 'h'},
@@ -50,6 +51,7 @@ static struct ShotOptions parse_options(
         {"monitor",     required_argument, NULL, 'm'},
         {"desktop",     no_argument,       NULL, 'd'},
         {"interactive", no_argument,       NULL, 'i'},
+        {"window",      no_argument,       NULL, 'w'},
         {NULL,          0,                 NULL, 0}
     };
 
@@ -97,6 +99,11 @@ static struct ShotOptions parse_options(
 
             case 'i':
                 region_result = update_region_interactively(&options.region);
+                break;
+
+            case 'w':
+                region_result = update_region_from_active_window(
+                    &options.region);
                 break;
 
             default:
