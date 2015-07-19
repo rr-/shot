@@ -69,14 +69,16 @@ def configure(ctx):
 def build(ctx):
     path_to_src = ctx.path.find_node('src').abspath()
 
-    ctx.env.DEFINES += [ 'SHOT_VERSION="' + VERSION_LONG + '"' ]
-    ctx.env.DEFINES += ['_POSIX_C_SOURCE=200809L' ]
-    ctx.env.CFLAGS += ['-iquote', path_to_src]
-
     #work around waf inconsistencies (#1600)
     for define in [d for d in ctx.env.DEFINES if d.startswith('HAVE_')]:
         key, value = define.split('=')
         ctx.env[key] = int(value)
+
+    ctx.env.DEFINES += [ 'SHOT_VERSION="' + VERSION_LONG + '"' ]
+    ctx.env.DEFINES += ['_POSIX_C_SOURCE=200809L' ]
+    ctx.env.CFLAGS += ['-iquote', path_to_src]
+    if ctx.env.HAVE_GDI32:
+        ctx.env.LINKFLAGS += ['-mwindows']
 
     all_sources = ctx.path.ant_glob('src/**/*.c')
     x11_sources = ctx.path.ant_glob('src/**/*x11.c')
