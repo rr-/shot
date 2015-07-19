@@ -37,6 +37,8 @@ struct private
         Colormap colormap;
     } xlib;
 
+    ShotRegion *region;
+
     int x;
     int y;
     unsigned int width;
@@ -253,6 +255,15 @@ static void run_event_loop(struct private *p)
         switch (e.type)
         {
             case Expose:
+                //fix offset due to own border on first draw
+                if (p->region)
+                {
+                    pull_window_rect(p);
+                    p->x = p->region->x - p->border_size;
+                    p->y = p->region->y - p->border_size;
+                    sync_window_rect(p);
+                    p->region = NULL;
+                }
                 update_text(p);
                 break;
 
@@ -374,6 +385,7 @@ int update_region_interactively(ShotRegion *region)
             .display = display,
         },
         .canceled = 0,
+        .region = region,
         .width = region->width,
         .height = region->height,
         .x = region->x,
