@@ -296,19 +296,21 @@ static int register_class(
 {
     assert(class_name);
     assert(wnd_proc);
-    WNDCLASSEX wc;
-    wc.cbSize        = sizeof(WNDCLASSEX);
-    wc.style         = 0;
-    wc.lpfnWndProc   = wnd_proc;
-    wc.cbClsExtra    = 0;
-    wc.cbWndExtra    = 0;
-    wc.hInstance     = 0;
-    wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1); //...what the fuck?
-    wc.lpszMenuName  = NULL;
-    wc.lpszClassName = class_name;
-    wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
+    WNDCLASSEX wc =
+    {
+        .cbSize        = sizeof(WNDCLASSEX),
+        .style         = 0,
+        .lpfnWndProc   = wnd_proc,
+        .cbClsExtra    = 0,
+        .cbWndExtra    = 0,
+        .hInstance     = 0,
+        .hIcon         = LoadIcon(NULL, IDI_APPLICATION),
+        .hCursor       = LoadCursor(NULL, IDC_ARROW),
+        .hbrBackground = 0,
+        .lpszMenuName  = NULL,
+        .lpszClassName = class_name,
+        .hIconSm       = LoadIcon(NULL, IDI_APPLICATION),
+    };
     if (!RegisterClassEx(&wc))
     {
         fprintf(stderr, "Failed to register window class\n");
