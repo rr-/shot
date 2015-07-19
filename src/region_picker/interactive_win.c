@@ -86,6 +86,18 @@ static void handle_key_down(struct private *p, WPARAM key)
             p->keyboard_state.ctrl = 1;
             break;
 
+        case VK_ESCAPE:
+        case 'Q':
+            p->canceled = 1;
+            PostQuitMessage(0);
+            break;
+
+        case VK_RETURN:
+            p->canceled = -1;
+            ShowWindow(p->hwnd, SW_HIDE);
+            PostQuitMessage(0);
+            break;
+
         case VK_LEFT:
         case 'H':
             x = -1;
@@ -139,18 +151,6 @@ static void handle_key_up(struct private *p, WPARAM key)
 
         case VK_CONTROL:
             p->keyboard_state.ctrl = 0;
-            break;
-
-        case VK_ESCAPE:
-        case 'Q':
-            p->canceled = 1;
-            PostQuitMessage(0);
-            break;
-
-        case VK_RETURN:
-            p->canceled = -1;
-            ShowWindow(p->hwnd, SW_HIDE);
-            PostQuitMessage(0);
             break;
     }
 }
