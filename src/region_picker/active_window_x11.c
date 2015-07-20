@@ -10,17 +10,34 @@ int update_region_from_active_window(ShotRegion *region)
     Display *display = XOpenDisplay(NULL);
     assert(display);
 
+    Window root = RootWindow(display, DefaultScreen(display));
     Window window;
-    int revert_to;
-    XGetInputFocus(display, &window, &revert_to);
+
+    {
+        Atom key = XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
+        Atom value;
+        int format;
+        unsigned long extra, n;
+        unsigned char *data;
+        XGetWindowProperty(
+            display, root, key, 0, ~0, False, AnyPropertyType,
+            &value, &format, &n, &extra, &data);
+        if (data)
+            window = *(Window*)data;
+    }
+
+    if (window == None)
+    {
+        int revert_to;
+        XGetInputFocus(display, &window, &revert_to);
+    }
+
     if (window == None)
     {
         fprintf(stderr, "No focused window?\n");
         ret = ERR_OTHER;
         goto end;
     }
-
-    Window root = RootWindow(display, DefaultScreen(display));
 
     unsigned int border_size, depth;
     XGetGeometry(display, window, &root,
