@@ -51,4 +51,3 @@ int update_region_from_monitor(
     region->height = monitor->height;
     return 0;
 }
-
