@@ -199,9 +199,10 @@ int main(int argc, char **argv)
     if (!options.output_path)
         options.output_path = get_random_name();
 
-    if (!options.region.width || !options.region.height)
+    if (options.region.width <= 0 || options.region.height <= 0)
     {
-        fprintf(stderr, "Cannot take screenshot with 0 width or height.\n");
+        fprintf(stderr,
+            "Cannot take screenshot with non-positive width or height.\n");
         exit_code = 1;
         goto end;
     }

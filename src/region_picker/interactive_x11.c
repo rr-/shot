@@ -48,6 +48,11 @@ struct private
     int canceled;
 };
 
+static inline int _max(int a, int b)
+{
+    return a > b ? a : b;
+}
+
 static void pull_window_rect(struct private *p)
 {
     assert(p);
@@ -409,7 +414,7 @@ int update_region_interactively(ShotRegion *region)
 
     region->x = p.x + p.border_size;
     region->y = p.y + p.border_size;
-    region->width = p.width;
-    region->height = p.height;
+    region->width = _max(0, p.width);
+    region->height = _max(0, p.height);
     return 0;
 }

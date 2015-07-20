@@ -31,7 +31,7 @@ def configure_flags(ctx):
         '-pedantic-errors']
 
     if ctx.options.debug:
-        ctx.env.CFLAGS += ['-g']
+        ctx.env.CFLAGS += ['-ggdb']
         Logs.info('Debug information enabled')
     else:
         Logs.info('Debug information disabled, pass -d to enable')

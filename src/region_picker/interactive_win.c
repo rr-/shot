@@ -21,18 +21,24 @@ struct private
 
     struct
     {
-        int x, y;
+        short x, y;
     } last_mouse_pos;
 
     HWND hwnd;
 
+    unsigned int border_size;
     int x;
     int y;
-    unsigned int width;
-    unsigned int height;
+    int width;
+    int height;
 
     int canceled;
 };
+
+static inline int _max(int a, int b)
+{
+    return a > b ? a : b;
+}
 
 static void pull_window_rect(struct private *p)
 {
@@ -45,9 +51,13 @@ static void pull_window_rect(struct private *p)
     p->height = rect.bottom - rect.top;
 }
 
-static void sync_window_rect(const struct private *p)
+static void sync_window_rect(struct private *p)
 {
     assert(p);
+    int min_width = p->border_size * 2 + 5;
+    int min_height = p->border_size * 2 + 5;
+    p->width = _max(min_width, p->width);
+    p->height = _max(min_height, p->height);
     MoveWindow(p->hwnd, p->x, p->y, p->width, p->height, TRUE);
 }
 
@@ -157,7 +167,7 @@ static void handle_key_up(struct private *p, WPARAM key)
 }
 
 static void handle_mouse_down(
-    struct private *p, int button, int mouse_x, int mouse_y)
+    struct private *p, int button, short mouse_x, short mouse_y)
 {
     assert(p);
     pull_window_rect(p);
@@ -193,7 +203,7 @@ static void handle_mouse_up(struct private *p)
     p->window_state.moving = 0;
 }
 
-static void handle_mouse_move(struct private *p, int mouse_x, int mouse_y)
+static void handle_mouse_move(struct private *p, short mouse_x, short mouse_y)
 {
     assert(p);
     if (p->window_state.moving)
@@ -360,7 +370,6 @@ static void run_event_loop(struct private *p)
 
 int update_region_interactively(ShotRegion *region)
 {
-    const int border_size = 1;
     const char *class_name = "shot";
     if (register_class(class_name, &wnd_proc))
         return ERR_OTHER;
@@ -379,11 +388,12 @@ int update_region_interactively(ShotRegion *region)
             .moving = 0,
         },
         .canceled = 0,
-        .width = region->width + 2 * border_size,
-        .height = region->height + 2 * border_size,
-        .x = region->x - border_size,
-        .y = region->y - border_size,
+        .border_size = 1,
     };
+    p.width = region->width + 2 * p.border_size;
+    p.height = region->height + 2 * p.border_size;
+    p.x = region->x - p.border_size;
+    p.y = region->y - p.border_size;
 
     if (init_window(class_name, "shot", &p))
         return ERR_OTHER;
@@ -396,9 +406,9 @@ int update_region_interactively(ShotRegion *region)
     //wait for window close, vsync and other blows and whistles
     Sleep(100);
 
-    region->x = p.x + border_size;
-    region->y = p.y + border_size;
-    region->width = p.width - 2 * border_size;
-    region->height = p.height - 2 * border_size;
+    region->x = p.x + p.border_size;
+    region->y = p.y + p.border_size;
+    region->width = _max(0, p.width - 2 * p.border_size);
+    region->height = _max(0, p.height - 2 * p.border_size);
     return 0;
 }
