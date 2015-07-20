@@ -130,11 +130,11 @@ static void run_event_loop(struct private *p)
                 ip_update_text(&p->ip);
                 break;
 
-            case KeyRelease:
+            case KeyPress:
                 ip_handle_key_down(&p->ip, XLookupKeysym(&e.xkey, 0));
                 break;
 
-            case KeyPress:
+            case KeyRelease:
                 ip_handle_key_up(&p->ip, XLookupKeysym(&e.xkey, 0));
                 break;
 
