@@ -67,8 +67,8 @@ int bitmap_save_to_png(ShotBitmap *bitmap, const char *path)
         PNG_COMPRESSION_TYPE_DEFAULT,
         PNG_FILTER_TYPE_DEFAULT);
 
-    png_byte **row_pointers =
-        png_malloc(png_ptr, bitmap->height * sizeof(png_byte*));
+    png_byte **row_pointers = png_malloc(
+        png_ptr, bitmap->height * sizeof(png_byte*));
     for (unsigned int y = 0; y < bitmap->height; y++)
     {
         png_byte *row = png_malloc(png_ptr, bitmap->width * 3); //channels

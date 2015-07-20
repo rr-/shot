@@ -57,8 +57,7 @@ static struct ShotOptions parse_options(
     assert(monitor_mgr);
     assert(monitor_mgr->monitor_count);
 
-    struct ShotOptions options =
-    {
+    struct ShotOptions options = {
         .error = 0,
         .output_path = NULL,
     };
@@ -68,8 +67,7 @@ static struct ShotOptions parse_options(
     int region_result = -1;
 
     const char *short_opt = "ho:r:diw";
-    struct option long_opt[] =
-    {
+    struct option long_opt[] = {
         {"help",        no_argument,       NULL, 'h'},
         {"output",      required_argument, NULL, 'o'},
         {"region",      required_argument, NULL, 'r'},

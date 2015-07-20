@@ -19,8 +19,7 @@ int update_region_from_all_monitors(
 
     for (unsigned int i = 0; i < mgr->monitor_count; i++)
     {
-        ShotRegion pr =
-        {
+        ShotRegion pr = {
             .x = mgr->monitors[i]->x,
             .y = mgr->monitors[i]->y,
             .width  = mgr->monitors[i]->width  + mgr->monitors[i]->x - min_x,

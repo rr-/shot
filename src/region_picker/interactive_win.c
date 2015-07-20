@@ -337,8 +337,7 @@ static int register_class(
 {
     assert(class_name);
     assert(wnd_proc);
-    WNDCLASSEX wc =
-    {
+    WNDCLASSEX wc = {
         .cbSize        = sizeof(WNDCLASSEX),
         .style         = 0,
         .lpfnWndProc   = wnd_proc,
@@ -404,15 +403,12 @@ int update_region_interactively(ShotRegion *region, const ShotRegion *workarea)
     if (register_class(class_name, &wnd_proc))
         return ERR_OTHER;
 
-    struct private p =
-    {
-        .keyboard_state =
-        {
+    struct private p = {
+        .keyboard_state = {
             .ctrl = 0,
             .shift = 0,
         },
-        .window_state =
-        {
+        .window_state = {
             .moving = 0,
             .resizing_x = 0,
             .resizing_y = 0,
