@@ -4,7 +4,8 @@
 
 #define UNUSED(x) (void)(x)
 
-BOOL CALLBACK callback(HMONITOR hmonitor, HDC hdc, LPRECT rect, LPARAM data)
+static BOOL CALLBACK callback(
+    HMONITOR hmonitor, HDC hdc, LPRECT rect, LPARAM data)
 {
     UNUSED(hmonitor);
     UNUSED(hdc);

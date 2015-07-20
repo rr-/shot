@@ -296,7 +296,7 @@ static void run_event_loop(struct private *p)
     }
 }
 
-int init_window(struct private *p)
+static int init_window(struct private *p)
 {
     int screen = DefaultScreen(p->xlib.display);
     XVisualInfo visual;
