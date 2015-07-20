@@ -64,22 +64,19 @@ static void pull_window_rect(struct private *p)
     XTranslateCoordinates(
         p->xlib.display, p->xlib.window, p->xlib.root,
         0, 0, &p->rect.pos[0], &p->rect.pos[1], &child);
-    for (int i = 0; i < 2; i++)
-    {
-        p->rect.pos[i] -= p->border_size;
-        p->rect.size[i] += 2 * p->border_size;
-    }
 }
 
 static void sync_window_rect(struct private *p)
 {
     assert(p);
-    XMoveWindow(p->xlib.display, p->xlib.window, p->rect.pos[0], p->rect.pos[1]);
+    XMoveWindow(
+        p->xlib.display, p->xlib.window,
+        p->rect.pos[0] - p->border_size,
+        p->rect.pos[1] - p->border_size);
     XResizeWindow(
-        p->xlib.display,
-        p->xlib.window,
-        p->rect.size[0] - 2 * p->border_size,
-        p->rect.size[1] - 2 * p->border_size);
+        p->xlib.display, p->xlib.window,
+        p->rect.size[0],
+        p->rect.size[1]);
 }
 
 static void update_text(struct private *p)
