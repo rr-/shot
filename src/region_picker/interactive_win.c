@@ -25,7 +25,7 @@ struct private
         short x, y;
     } last_mouse_pos;
 
-    const ShotRegion *working_area;
+    const ShotRegion *workarea;
     HWND hwnd;
 
     int x;
@@ -57,10 +57,10 @@ static void pull_window_rect(struct private *p)
 static void limit_window_rect(struct private *p)
 {
     assert(p);
-    p->width = limit(p->width, 5, p->working_area->width);
-    p->height = limit(p->height, 5, p->working_area->height);
-    p->x = limit(p->x, p->working_area->x, p->working_area->width - p->width);
-    p->y = limit(p->y, p->working_area->y, p->working_area->height - p->height);
+    p->width = limit(p->width, 5, p->workarea->width);
+    p->height = limit(p->height, 5, p->workarea->height);
+    p->x = limit(p->x, p->workarea->x, p->workarea->width - p->width);
+    p->y = limit(p->y, p->workarea->y, p->workarea->height - p->height);
 }
 
 static void sync_window_rect(struct private *p)
@@ -237,20 +237,32 @@ static void handle_mouse_move(struct private *p, short mouse_x, short mouse_y)
     else if (p->window_state.resizing_x || p->window_state.resizing_y)
     {
         int old_x = p->x, old_y = p->y;
-        if (p->window_state.resizing_x == -1)
+        int dx = mouse_x - p->last_mouse_pos.x;
+        int dy = mouse_y - p->last_mouse_pos.y;
+        int min_x = p->workarea->x;
+        int min_y = p->workarea->y;
+        int max_x = p->workarea->x + p->workarea->width - p->x;
+        int max_y = p->workarea->y + p->workarea->height - p->y;
+
+        if (p->window_state.resizing_x == -1 && p->x + dx >= min_x)
         {
-            p->x += mouse_x - p->last_mouse_pos.x;
-            p->width -= mouse_x - p->last_mouse_pos.x;
+            p->x += dx;
+            p->width -= dx;
         }
-        else if (p->window_state.resizing_x == 1)
-            p->width += mouse_x - p->last_mouse_pos.x;
-        if (p->window_state.resizing_y == -1)
+        else if (p->window_state.resizing_x == 1 && (int)(p->width+dx) < max_x)
         {
-            p->y += mouse_y - p->last_mouse_pos.y;
-            p->height -= mouse_y - p->last_mouse_pos.y;
+            p->width += dx;
         }
-        else if (p->window_state.resizing_y == 1)
-            p->height += mouse_y - p->last_mouse_pos.y;
+
+        if (p->window_state.resizing_y == -1 && p->y + dy >= min_y)
+        {
+            p->y += dy;
+            p->height -= dy;
+        }
+        else if (p->window_state.resizing_y == 1 && (int)(p->height+dy) < max_y)
+        {
+            p->height += dy;
+        }
 
         sync_window_rect(p);
         update_text(p);
@@ -266,7 +278,6 @@ static LRESULT CALLBACK wnd_proc(
 
     switch (msg)
     {
-
         case WM_ERASEBKGND:
         {
             RECT rect;
@@ -386,8 +397,7 @@ static void run_event_loop(struct private *p)
     }
 }
 
-int update_region_interactively(
-    ShotRegion *region, const ShotRegion *working_area)
+int update_region_interactively(ShotRegion *region, const ShotRegion *workarea)
 {
     const char *class_name = "shot";
     if (register_class(class_name, &wnd_proc))
@@ -408,7 +418,7 @@ int update_region_interactively(
             .mouse_captured = 0,
         },
         .canceled = 0,
-        .working_area = working_area,
+        .workarea = workarea,
         .x = region->x,
         .y = region->y,
         .width = region->width,
