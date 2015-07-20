@@ -37,7 +37,7 @@ struct private
         Colormap colormap;
     } xlib;
 
-    ShotRegion *region;
+    const ShotRegion *working_area;
 
     int x;
     int y;
@@ -48,9 +48,11 @@ struct private
     int canceled;
 };
 
-static inline int _max(int a, int b)
+static inline int limit(int a, int min, int max)
 {
-    return a > b ? a : b;
+    if (a < min) a = min;
+    if (a > max) a = max;
+    return a;
 }
 
 static void pull_window_rect(struct private *p)
@@ -64,14 +66,29 @@ static void pull_window_rect(struct private *p)
         0, 0, &p->x, &p->y, &child);
     p->x -= p->border_size;
     p->y -= p->border_size;
+    p->width += 2 * p->border_size;
+    p->height += 2 * p->border_size;
 }
 
-static void sync_window_rect(const struct private *p)
+static void limit_window_rect(struct private *p)
 {
     assert(p);
+    p->width = limit(p->width, 5, p->working_area->width);
+    p->height = limit(p->height, 5, p->working_area->height);
+    p->x = limit(p->x, p->working_area->x, p->working_area->width - p->width);
+    p->y = limit(p->y, p->working_area->y, p->working_area->height - p->height);
+}
+
+static void sync_window_rect(struct private *p)
+{
+    assert(p);
+    limit_window_rect(p);
     XMoveWindow(p->xlib.display, p->xlib.window, p->x, p->y);
-    XResizeWindow(p->xlib.display, p->xlib.window,
-        p->width, p->height);
+    XResizeWindow(
+        p->xlib.display,
+        p->xlib.window,
+        limit(p->width - 2 * p->border_size, 5, 65535),
+        limit(p->height - 2 * p->border_size, 5, 65535));
 }
 
 static void update_text(struct private *p)
@@ -252,6 +269,8 @@ static void run_event_loop(struct private *p)
         | KeyPressMask | KeyReleaseMask
         | ButtonPress | ButtonReleaseMask | PointerMotionMask);
 
+    static int border_fixed = 0;
+
     while (!p->canceled)
     {
         XEvent e;
@@ -261,15 +280,16 @@ static void run_event_loop(struct private *p)
         {
             case Expose:
                 //fix offset due to own border on first draw
-                if (p->region)
+                if (!border_fixed)
                 {
-                    pull_window_rect(p);
-                    p->x = p->region->x - p->border_size;
-                    p->y = p->region->y - p->border_size;
+                    XWindowAttributes attrs;
+                    XGetWindowAttributes(
+                        p->xlib.display, p->xlib.window, &attrs);
+                    p->border_size = attrs.border_width;
                     sync_window_rect(p);
-                    p->region = NULL;
+                    update_text(p);
+                    border_fixed = 1;
                 }
-                update_text(p);
                 break;
 
             case KeyRelease:
@@ -391,12 +411,13 @@ int update_region_interactively(
             .display = display,
         },
         .canceled = 0,
-        .region = region,
-        .width = region->width,
-        .height = region->height,
+        .working_area = working_area,
         .x = region->x,
         .y = region->y,
+        .width = region->width,
+        .height = region->height,
     };
+    limit_window_rect(&p);
 
     if (init_window(&p))
         return ERR_OTHER;
@@ -413,9 +434,9 @@ int update_region_interactively(
     tim.tv_nsec = 5e8;
     nanosleep(&tim , &tim2);
 
-    region->x = p.x + p.border_size;
-    region->y = p.y + p.border_size;
-    region->width = _max(0, p.width);
-    region->height = _max(0, p.height);
+    region->x = p.x;
+    region->y = p.y;
+    region->width = p.width;
+    region->height = p.height;
     return 0;
 }
