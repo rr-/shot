@@ -139,7 +139,10 @@ static LRESULT CALLBACK wnd_proc(
             break;
 
         case WM_MOUSEMOVE:
-            ip_handle_mouse_move(&p->ip, LOWORD(lparam), HIWORD(lparam));
+            ip_handle_mouse_move(
+                &p->ip,
+                (short)LOWORD(lparam),
+                (short)HIWORD(lparam));
             break;
 
         default:
