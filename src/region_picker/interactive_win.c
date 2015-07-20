@@ -17,6 +17,7 @@ struct private
         int moving;
         int resizing_x;
         int resizing_y;
+        int mouse_captured;
     } window_state;
 
     struct
@@ -187,6 +188,8 @@ static void handle_mouse_down(
         p->window_state.moving = 1;
         p->window_state.resizing_x = 0;
         p->window_state.resizing_y = 0;
+        p->window_state.mouse_captured = 1;
+        SetCapture(p->hwnd);
     }
     else if (button == VK_RBUTTON)
     {
@@ -201,6 +204,7 @@ static void handle_mouse_down(
             p->window_state.resizing_y = -1;
         else if (p->last_mouse_pos.y > (int)p->height * 2/3)
             p->window_state.resizing_y = 1;
+        p->window_state.mouse_captured = 1;
         SetCapture(p->hwnd);
     }
 }
@@ -208,8 +212,11 @@ static void handle_mouse_down(
 static void handle_mouse_up(struct private *p)
 {
     assert(p);
-    if (p->window_state.resizing_x || p->window_state.resizing_y)
+    if (p->window_state.mouse_captured)
+    {
         ReleaseCapture();
+        p->window_state.mouse_captured = 0;
+    }
     p->window_state.resizing_x = 0;
     p->window_state.resizing_y = 0;
     p->window_state.moving = 0;
@@ -396,9 +403,10 @@ int update_region_interactively(
         },
         .window_state =
         {
+            .moving = 0,
             .resizing_x = 0,
             .resizing_y = 0,
-            .moving = 0,
+            .mouse_captured = 0,
         },
         .canceled = 0,
         .working_area = working_area,
