@@ -209,7 +209,8 @@ int main(int argc, char **argv)
 
     ShotBitmap *bitmap = grab_screenshot(&options.region);
     assert(bitmap);
-    bitmap_save_to_png(bitmap, options.output_path);
+    if (bitmap_save_to_png(bitmap, options.output_path))
+        exit_code = 1;
     bitmap_destroy(bitmap);
 
 end:

@@ -28,22 +28,34 @@ int bitmap_save_to_png(ShotBitmap *bitmap, const char *path)
 {
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
-    int status = -1;
+    int ret = 1;
 
     FILE *fp = fopen(path, "wb");
     if (!fp)
+    {
+        fprintf(stderr, "Can't open %s for writing.\n", path);
         goto end;
+    }
 
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
+    {
+        fprintf(stderr, "Can't intialize PNG writer.\n");
         goto end;
+    }
 
     info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr)
+    {
+        fprintf(stderr, "Can't intialize PNG writer.\n");
         goto end;
+    }
 
     if (setjmp(png_jmpbuf(png_ptr)))
+    {
+        fprintf(stderr, "Can't intialize PNG writer.\n");
         goto end;
+    }
 
     png_set_IHDR(png_ptr,
         info_ptr,
@@ -74,7 +86,7 @@ int bitmap_save_to_png(ShotBitmap *bitmap, const char *path)
     png_set_rows(png_ptr, info_ptr, row_pointers);
     png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
-    status = 0;
+    ret = 0;
     for (unsigned int y = 0; y < bitmap->height; y++)
         png_free(png_ptr, row_pointers[y]);
     png_free(png_ptr, row_pointers);
@@ -84,5 +96,5 @@ end:
         png_destroy_write_struct (&png_ptr, &info_ptr);
     if (fp)
         fclose(fp);
-    return status;
+    return ret;
 }
