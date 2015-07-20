@@ -18,6 +18,7 @@ struct private
         int resizing_x;
         int resizing_y;
         int mouse_captured;
+        ShotRegion resize_boundary;
     } window_state;
 
     struct

@@ -8,6 +8,17 @@
 #include "region_picker/errors.h"
 #include "region_picker/interactive.h"
 
+#define MIN_SIZE 30
+
+struct rectangle
+{
+    int pos[2];
+    int size[2];
+};
+
+void _min(int *a, int b) { if (*a > b) *a = b; }
+void _max(int *a, int b) { if (*a < b) *a = b; }
+
 struct private
 {
     struct
@@ -19,14 +30,10 @@ struct private
     struct
     {
         int moving;
-        int resizing_x;
-        int resizing_y;
+        int resizing[2];
     } window_state;
 
-    struct
-    {
-        int x, y;
-    } last_mouse_pos;
+    int last_mouse_pos[2];
 
     struct
     {
@@ -37,58 +44,42 @@ struct private
         Colormap colormap;
     } xlib;
 
-    const ShotRegion *workarea;
-
-    int x;
-    int y;
-    unsigned int width;
-    unsigned int height;
     unsigned int border_size;
+    struct rectangle rect;
+    const struct rectangle workarea;
 
     int canceled;
 };
-
-static inline int limit(int a, int min, int max)
-{
-    if (a < min) a = min;
-    if (a > max) a = max;
-    return a;
-}
 
 static void pull_window_rect(struct private *p)
 {
     assert(p);
     unsigned int depth;
-    XGetGeometry(p->xlib.display, p->xlib.window, &p->xlib.root,
-        &p->x, &p->y, &p->width, &p->height, &p->border_size, &depth);
+    XGetGeometry(
+        p->xlib.display, p->xlib.window, &p->xlib.root,
+        &p->rect.pos[0], &p->rect.pos[1],
+        (unsigned int*)&p->rect.size[0], (unsigned int*)&p->rect.size[1],
+        &p->border_size, &depth);
     Window child;
-    XTranslateCoordinates(p->xlib.display, p->xlib.window, p->xlib.root,
-        0, 0, &p->x, &p->y, &child);
-    p->x -= p->border_size;
-    p->y -= p->border_size;
-    p->width += 2 * p->border_size;
-    p->height += 2 * p->border_size;
-}
-
-static void limit_window_rect(struct private *p)
-{
-    assert(p);
-    p->width = limit(p->width, 5, p->workarea->width);
-    p->height = limit(p->height, 5, p->workarea->height);
-    p->x = limit(p->x, p->workarea->x, p->workarea->width - p->width);
-    p->y = limit(p->y, p->workarea->y, p->workarea->height - p->height);
+    XTranslateCoordinates(
+        p->xlib.display, p->xlib.window, p->xlib.root,
+        0, 0, &p->rect.pos[0], &p->rect.pos[1], &child);
+    for (int i = 0; i < 2; i++)
+    {
+        p->rect.pos[i] -= p->border_size;
+        p->rect.size[i] += 2 * p->border_size;
+    }
 }
 
 static void sync_window_rect(struct private *p)
 {
     assert(p);
-    limit_window_rect(p);
-    XMoveWindow(p->xlib.display, p->xlib.window, p->x, p->y);
+    XMoveWindow(p->xlib.display, p->xlib.window, p->rect.pos[0], p->rect.pos[1]);
     XResizeWindow(
         p->xlib.display,
         p->xlib.window,
-        limit(p->width - 2 * p->border_size, 5, 65535),
-        limit(p->height - 2 * p->border_size, 5, 65535));
+        p->rect.size[0] - 2 * p->border_size,
+        p->rect.size[1] - 2 * p->border_size);
 }
 
 static void update_text(struct private *p)
@@ -97,12 +88,12 @@ static void update_text(struct private *p)
     XFlush(p->xlib.display);
 
     char msg[100];
-    sprintf(msg, "%dx%d+%d+%d", p->width, p->height, p->x, p->y);
+    sprintf(msg, "%dx%d+%d+%d", p->rect.size[0], p->rect.size[1], p->rect.pos[0], p->rect.pos[1]);
 
     const int char_width = 6;
     const int char_height = 9;
-    int text_x = (p->width - strlen(msg) * char_width) / 2;
-    int text_y = (p->height - char_height) / 2 + char_height;
+    int text_x = (p->rect.size[0] - strlen(msg) * char_width) / 2;
+    int text_y = (p->rect.size[1] - char_height) / 2 + char_height;
     XSetForeground(p->xlib.display, p->xlib.gc, 0xff000000);
     XDrawString(p->xlib.display, p->xlib.window, p->xlib.gc,
         text_x, text_y, msg, strlen(msg));
@@ -126,7 +117,7 @@ static void handle_key_down(struct private *p, KeySym keysym)
 
 static void handle_key_up(struct private *p, KeySym keysym)
 {
-    int x = 0, y = 0;
+    int delta[2] = { 0, 0 };
 
     switch (keysym)
     {
@@ -152,39 +143,55 @@ static void handle_key_up(struct private *p, KeySym keysym)
 
         case XK_Left:
         case XK_h:
-            x = -1;
+            delta[0] = -1;
             break;
 
         case XK_Right:
         case XK_l:
-            x = 1;
+            delta[0] = 1;
             break;
 
         case XK_Down:
         case XK_j:
-            y = 1;
+            delta[1] = 1;
             break;
 
         case XK_Up:
         case XK_k:
-            y = -1;
+            delta[1] = -1;
             break;
     }
 
-    if (x || y)
+    if (delta[0] || delta[1])
     {
         pull_window_rect(p);
 
-        int delta = p->keyboard_state.shift ? 1 : 25;
+        const struct rectangle *wa = &p->workarea;
+        struct rectangle *r = &p->rect;
+
+        if (!p->keyboard_state.shift)
+        {
+            for (int i = 0; i < 2; i++)
+                delta[i] *= 25;
+        }
+
         if (p->keyboard_state.ctrl)
         {
-            p->width  += x * delta;
-            p->height += y * delta;
+            for (int i = 0; i < 2; i++)
+            {
+                r->size[i] += delta[i];
+                _max(&r->size[i], MIN_SIZE);
+                _min(&r->size[i], wa->pos[i] + wa->size[i] - r->pos[i]);
+            }
         }
         else
         {
-            p->x += x * delta;
-            p->y += y * delta;
+            for (int i = 0; i < 2; i++)
+            {
+                r->pos[i] += delta[i];
+                _max(&r->pos[i], wa->pos[i]);
+                _min(&r->pos[i], wa->pos[i] + wa->size[i] - r->size[i]);
+            }
         }
 
         sync_window_rect(p);
@@ -196,84 +203,93 @@ static void handle_mouse_down(
     struct private *p, unsigned int button, int mouse_x, int mouse_y)
 {
     pull_window_rect(p);
-    p->last_mouse_pos.x = mouse_x;
-    p->last_mouse_pos.y = mouse_y;
+    p->last_mouse_pos[0] = mouse_x;
+    p->last_mouse_pos[1] = mouse_y;
     if (button == Button1)
     {
-        p->window_state.resizing_x = 0;
-        p->window_state.resizing_y = 0;
+        p->window_state.resizing[0] = 0;
+        p->window_state.resizing[1] = 0;
         p->window_state.moving = 1;
     }
     else
     {
-        p->window_state.resizing_x = 0;
-        p->window_state.resizing_y = 0;
         p->window_state.moving = 0;
-        if (mouse_x < (int)p->width / 3)
-            p->window_state.resizing_x = -1;
-        else if (mouse_x > (int)p->width * 2/3)
-            p->window_state.resizing_x = 1;
-        if (mouse_y < (int)p->height / 3)
-            p->window_state.resizing_y = -1;
-        else if (mouse_y > (int)p->height * 2/3)
-            p->window_state.resizing_y = 1;
+        int mouse_pos[2] = { mouse_x, mouse_y };
+        for (int i = 0; i < 2; i++)
+        {
+            p->window_state.resizing[i] = 0;
+            if (mouse_pos[i] < p->rect.size[i] / 3)
+                p->window_state.resizing[i] = -1;
+            else if (mouse_pos[i] > p->rect.size[i] * 2/3)
+                p->window_state.resizing[i] = 1;
+        }
     }
 }
 
 static void handle_mouse_up(struct private *p)
 {
     p->window_state.moving = 0;
-    p->window_state.resizing_x = 0;
-    p->window_state.resizing_y = 0;
+    p->window_state.resizing[0] = 0;
+    p->window_state.resizing[1] = 0;
 }
 
 static void handle_mouse_move(struct private *p, int mouse_x, int mouse_y)
 {
+    const struct rectangle *wa = &p->workarea;
+    struct rectangle *r = &p->rect;
+
+    int mouse_pos[2] = { mouse_x, mouse_y };
+    int old_pos[2] = { r->pos[0], r->pos[1] };
+
     if (p->window_state.moving)
     {
-        int old_x = p->x, old_y = p->y;
-        p->x += mouse_x - p->last_mouse_pos.x;
-        p->y += mouse_y - p->last_mouse_pos.y;
+        for (int i = 0; i < 2; i++)
+        {
+            r->pos[i] += mouse_pos[i] - p->last_mouse_pos[i];
+            if (r->pos[i] < wa->pos[i])
+                r->pos[i] = wa->pos[i];
+            if (r->pos[i] > wa->pos[i] + wa->size[i] - r->size[i])
+                r->pos[i] = wa->pos[i] + wa->size[i] - r->size[i];
+        }
         sync_window_rect(p);
-        p->last_mouse_pos.x = mouse_x + old_x - p->x;
-        p->last_mouse_pos.y = mouse_y + old_y - p->y;
         update_text(p);
     }
-    else if (p->window_state.resizing_x || p->window_state.resizing_y)
+
+    else if (p->window_state.resizing[0] || p->window_state.resizing[1])
     {
-        int old_x = p->x, old_y = p->y;
-        int dx = mouse_x - p->last_mouse_pos.x;
-        int dy = mouse_y - p->last_mouse_pos.y;
-        int min_x = p->workarea->x;
-        int min_y = p->workarea->y;
-        int max_x = p->workarea->x + p->workarea->width - p->x;
-        int max_y = p->workarea->y + p->workarea->height - p->y;
+        int mouse_delta[2] = {
+            mouse_x - p->last_mouse_pos[0],
+            mouse_y - p->last_mouse_pos[1]
+        };
 
-        if (p->window_state.resizing_x == -1 && p->x + dx >= min_x)
+        for (int i = 0; i < 2; i++)
         {
-            p->x += dx;
-            p->width -= dx;
-        }
-        else if (p->window_state.resizing_x == 1 && (int)(p->width+dx) < max_x)
-        {
-            p->width += dx;
-        }
-
-        if (p->window_state.resizing_y == -1 && p->y + dy >= min_y)
-        {
-            p->y += dy;
-            p->height -= dy;
-        }
-        else if (p->window_state.resizing_y == 1 && (int)(p->height+dy) < max_y)
-        {
-            p->height += dy;
+            if (p->window_state.resizing[i] == -1)
+            {
+                int npos = r->pos[i] + mouse_delta[i];
+                _max(&npos, wa->pos[i]);
+                _min(&npos, wa->pos[i] + wa->size[i] - r->size[i]);
+                int nsize = p->rect.size[i] + old_pos[i] - npos;
+                _max(&nsize, MIN_SIZE);
+                _min(&nsize, wa->pos[i] + wa->size[i] - r->pos[i]);
+                npos = p->rect.size[i] + old_pos[i] - nsize;
+                p->rect.size[i] = nsize;
+                r->pos[i] = npos;
+            }
+            else if (p->window_state.resizing[i] == 1)
+            {
+                p->rect.size[i] += mouse_delta[i];
+                _max(&r->size[i], MIN_SIZE);
+                _min(&r->size[i], wa->pos[i] + wa->size[i] - r->pos[i]);
+            }
         }
 
         sync_window_rect(p);
         update_text(p);
-        p->last_mouse_pos.x = mouse_x + old_x - p->x;
-        p->last_mouse_pos.y = mouse_y + old_y - p->y;
     }
+
+    for (int i = 0; i < 2; i++)
+        p->last_mouse_pos[i] = mouse_pos[i] + old_pos[i] - r->pos[i];
 }
 
 static void run_event_loop(struct private *p)
@@ -350,7 +366,8 @@ static int init_window(struct private *p)
     attrs.border_pixel = 0;
 
     p->xlib.window = XCreateWindow(
-        p->xlib.display, p->xlib.root, p->x, p->y, p->width, p->height,
+        p->xlib.display, p->xlib.root,
+        p->rect.pos[0], p->rect.pos[1], p->rect.size[0], p->rect.size[1],
         0, visual.depth, InputOutput, visual.visual,
         CWBackPixel | CWColormap | CWBorderPixel, &attrs);
 
@@ -375,8 +392,7 @@ static int init_window(struct private *p)
             long            inputMode;
             unsigned long   status;
         };
-        struct MotifHints value =
-        {
+        struct MotifHints value = {
             .flags = 2,
             .decorations = 0,
         };
@@ -405,31 +421,28 @@ int update_region_interactively(ShotRegion *region, const ShotRegion *workarea)
     Display *display = XOpenDisplay(NULL);
     assert(display);
 
-    struct private p =
-    {
-        .keyboard_state =
-        {
+    struct private p = {
+        .keyboard_state = {
             .ctrl = 0,
             .shift = 0,
         },
-        .window_state =
-        {
-            .resizing_x = 0,
-            .resizing_y = 0,
+        .window_state = {
+            .resizing = { 0, 0 },
             .moving = 0,
         },
-        .xlib =
-        {
+        .xlib = {
             .display = display,
         },
         .canceled = 0,
-        .workarea = workarea,
-        .x = region->x,
-        .y = region->y,
-        .width = region->width,
-        .height = region->height,
+        .workarea = {
+            .pos = { workarea->x, workarea->y },
+            .size = { workarea->width, workarea->height }
+        },
+        .rect = {
+            .pos = { region->x, region->y },
+            .size = { region->width, region->height },
+        },
     };
-    limit_window_rect(&p);
 
     if (init_window(&p))
         return ERR_OTHER;
@@ -446,9 +459,9 @@ int update_region_interactively(ShotRegion *region, const ShotRegion *workarea)
     tim.tv_nsec = 5e8;
     nanosleep(&tim , &tim2);
 
-    region->x = p.x;
-    region->y = p.y;
-    region->width = p.width;
-    region->height = p.height;
+    region->x = p.rect.pos[0];
+    region->y = p.rect.pos[1];
+    region->width = p.rect.size[0];
+    region->height = p.rect.size[1];
     return 0;
 }
