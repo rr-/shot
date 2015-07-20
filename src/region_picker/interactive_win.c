@@ -360,6 +360,7 @@ static void run_event_loop(struct private *p)
 
 int update_region_interactively(ShotRegion *region)
 {
+    const int border_size = 1;
     const char *class_name = "shot";
     if (register_class(class_name, &wnd_proc))
         return ERR_OTHER;
@@ -378,10 +379,10 @@ int update_region_interactively(ShotRegion *region)
             .moving = 0,
         },
         .canceled = 0,
-        .width = region->width,
-        .height = region->height,
-        .x = region->x,
-        .y = region->y,
+        .width = region->width + 2 * border_size,
+        .height = region->height + 2 * border_size,
+        .x = region->x - border_size,
+        .y = region->y - border_size,
     };
 
     if (init_window(class_name, "shot", &p))
@@ -395,7 +396,6 @@ int update_region_interactively(ShotRegion *region)
     //wait for window close, vsync and other blows and whistles
     Sleep(100);
 
-    const int border_size = 1;
     region->x = p.x + border_size;
     region->y = p.y + border_size;
     region->width = p.width - 2 * border_size;
