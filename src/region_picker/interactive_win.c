@@ -3,85 +3,72 @@
 #include <Windows.h>
 #include "region_picker/errors.h"
 #include "region_picker/interactive.h"
+#include "region_picker/interactive_common.h"
+
+int IP_MOUSE_LEFT   = VK_LBUTTON;
+int IP_MOUSE_RIGHT  = VK_RBUTTON;
+int IP_KEY_LSHIFT   = VK_LSHIFT;
+int IP_KEY_RSHIFT   = VK_RSHIFT;
+int IP_KEY_LCONTROL = VK_LCONTROL;
+int IP_KEY_RCONTROL = VK_RCONTROL;
+int IP_KEY_ESCAPE   = VK_ESCAPE;
+int IP_KEY_Q        = 'Q';
+int IP_KEY_H        = 'H';
+int IP_KEY_J        = 'J';
+int IP_KEY_K        = 'K';
+int IP_KEY_L        = 'L';
+int IP_KEY_LEFT     = VK_LEFT;
+int IP_KEY_DOWN     = VK_DOWN;
+int IP_KEY_UP       = VK_UP;
+int IP_KEY_RIGHT    = VK_RIGHT;
+int IP_KEY_RETURN   = VK_RETURN;
 
 struct private
 {
-    struct
-    {
-        int ctrl;
-        int shift;
-    } keyboard_state;
-
-    struct
-    {
-        int moving;
-        int resizing_x;
-        int resizing_y;
-        int mouse_captured;
-        ShotRegion resize_boundary;
-    } window_state;
-
-    struct
-    {
-        short x, y;
-    } last_mouse_pos;
-
-    const ShotRegion *workarea;
+    int mouse_captured;
     HWND hwnd;
-
-    int x;
-    int y;
-    int width;
-    int height;
-
-    int canceled;
+    ShotInteractivePicker ip;
 };
 
-static inline int limit(int a, int min, int max)
+void ip_pull_window_rect(ShotInteractivePicker *ip)
 {
-    if (a < min) a = min;
-    if (a > max) a = max;
-    return a;
-}
+    assert(ip);
 
-static void pull_window_rect(struct private *p)
-{
-    assert(p);
+    struct private *priv = ip->priv;
     RECT rect;
-    GetWindowRect(p->hwnd, &rect);
-    p->x = rect.left;
-    p->y = rect.top;
-    p->width = rect.right - rect.left;
-    p->height = rect.bottom - rect.top;
+    GetWindowRect(priv->hwnd, &rect);
+    ip->rect.pos[0] = rect.left;
+    ip->rect.pos[1] = rect.top;
+    ip->rect.size[0] = rect.right - rect.left;
+    ip->rect.size[1] = rect.bottom - rect.top;
 }
 
-static void limit_window_rect(struct private *p)
+void ip_sync_window_rect(ShotInteractivePicker *ip)
 {
-    assert(p);
-    p->width = limit(p->width, 5, p->workarea->width);
-    p->height = limit(p->height, 5, p->workarea->height);
-    p->x = limit(p->x, p->workarea->x, p->workarea->width - p->width);
-    p->y = limit(p->y, p->workarea->y, p->workarea->height - p->height);
+    assert(ip);
+    struct private *priv = ip->priv;
+    MoveWindow(
+        priv->hwnd,
+        ip->rect.pos[0], ip->rect.pos[1],
+        ip->rect.size[0], ip->rect.size[1],
+        TRUE);
 }
 
-static void sync_window_rect(struct private *p)
+void ip_update_text(ShotInteractivePicker *ip)
 {
-    assert(p);
-    limit_window_rect(p);
-    MoveWindow(p->hwnd, p->x, p->y, p->width, p->height, TRUE);
-}
-
-static void update_text(struct private *p)
-{
+    struct private *priv = ip->priv;
     RECT rect;
-    GetClientRect(p->hwnd, &rect);
-    InvalidateRect(p->hwnd, &rect, TRUE);
+    GetClientRect(priv->hwnd, &rect);
+    InvalidateRect(priv->hwnd, &rect, TRUE);
 }
 
 static void draw_text(struct private *p)
 {
     char msg[100];
-    sprintf(msg, "%dx%d+%d+%d", p->width, p->height, p->x, p->y);
+    sprintf(msg,
+        "%dx%d+%d+%d",
+        p->ip.rect.size[0], p->ip.rect.size[1],
+        p->ip.rect.pos[0], p->ip.rect.pos[1]);
 
     RECT rect;
     GetClientRect(p->hwnd, &rect);
@@ -90,186 +77,6 @@ static void draw_text(struct private *p)
     SetBkMode(wdc,TRANSPARENT);
     DrawText(wdc, msg, -1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
     DeleteDC(wdc);
-}
-
-static void handle_key_down(struct private *p, WPARAM key)
-{
-    assert(p);
-    int x = 0, y = 0;
-
-    switch (key)
-    {
-        case VK_SHIFT:
-            p->keyboard_state.shift = 1;
-            break;
-
-        case VK_CONTROL:
-            p->keyboard_state.ctrl = 1;
-            break;
-
-        case VK_ESCAPE:
-        case 'Q':
-            p->canceled = 1;
-            PostQuitMessage(0);
-            break;
-
-        case VK_RETURN:
-            p->canceled = -1;
-            ShowWindow(p->hwnd, SW_HIDE);
-            PostQuitMessage(0);
-            break;
-
-        case VK_LEFT:
-        case 'H':
-            x = -1;
-            break;
-
-        case VK_RIGHT:
-        case 'L':
-            x = 1;
-            break;
-
-        case VK_DOWN:
-        case 'J':
-            y = 1;
-            break;
-
-        case VK_UP:
-        case 'K':
-            y = -1;
-            break;
-    }
-
-    if (x || y)
-    {
-        pull_window_rect(p);
-
-        int delta = p->keyboard_state.shift ? 1 : 25;
-        if (p->keyboard_state.ctrl)
-        {
-            p->width  += x * delta;
-            p->height += y * delta;
-        }
-        else
-        {
-            p->x += x * delta;
-            p->y += y * delta;
-        }
-
-        sync_window_rect(p);
-        update_text(p);
-    }
-}
-
-static void handle_key_up(struct private *p, WPARAM key)
-{
-    assert(p);
-    switch (key)
-    {
-        case VK_SHIFT:
-            p->keyboard_state.shift = 0;
-            break;
-
-        case VK_CONTROL:
-            p->keyboard_state.ctrl = 0;
-            break;
-    }
-}
-
-static void handle_mouse_down(
-    struct private *p, int button, short mouse_x, short mouse_y)
-{
-    assert(p);
-    pull_window_rect(p);
-    p->last_mouse_pos.x = mouse_x;
-    p->last_mouse_pos.y = mouse_y;
-    if (button == VK_LBUTTON)
-    {
-        p->window_state.moving = 1;
-        p->window_state.resizing_x = 0;
-        p->window_state.resizing_y = 0;
-        p->window_state.mouse_captured = 1;
-        SetCapture(p->hwnd);
-    }
-    else if (button == VK_RBUTTON)
-    {
-        p->window_state.moving = 0;
-        p->window_state.resizing_x = 0;
-        p->window_state.resizing_y = 0;
-        if (p->last_mouse_pos.x < (int)p->width / 3)
-            p->window_state.resizing_x = -1;
-        else if (p->last_mouse_pos.x > (int)p->width * 2/3)
-            p->window_state.resizing_x = 1;
-        if (p->last_mouse_pos.y < (int)p->height / 3)
-            p->window_state.resizing_y = -1;
-        else if (p->last_mouse_pos.y > (int)p->height * 2/3)
-            p->window_state.resizing_y = 1;
-        p->window_state.mouse_captured = 1;
-        SetCapture(p->hwnd);
-    }
-}
-
-static void handle_mouse_up(struct private *p)
-{
-    assert(p);
-    if (p->window_state.mouse_captured)
-    {
-        ReleaseCapture();
-        p->window_state.mouse_captured = 0;
-    }
-    p->window_state.resizing_x = 0;
-    p->window_state.resizing_y = 0;
-    p->window_state.moving = 0;
-}
-
-static void handle_mouse_move(struct private *p, short mouse_x, short mouse_y)
-{
-    assert(p);
-    if (p->window_state.moving)
-    {
-        int old_x = p->x, old_y = p->y;
-        p->x += mouse_x - p->last_mouse_pos.x;
-        p->y += mouse_y - p->last_mouse_pos.y;
-        sync_window_rect(p);
-        p->last_mouse_pos.x = mouse_x + old_x - p->x;
-        p->last_mouse_pos.y = mouse_y + old_y - p->y;
-        update_text(p);
-    }
-    else if (p->window_state.resizing_x || p->window_state.resizing_y)
-    {
-        int old_x = p->x, old_y = p->y;
-        int dx = mouse_x - p->last_mouse_pos.x;
-        int dy = mouse_y - p->last_mouse_pos.y;
-        int min_x = p->workarea->x;
-        int min_y = p->workarea->y;
-        int max_x = p->workarea->x + p->workarea->width - p->x;
-        int max_y = p->workarea->y + p->workarea->height - p->y;
-
-        if (p->window_state.resizing_x == -1 && p->x + dx >= min_x)
-        {
-            p->x += dx;
-            p->width -= dx;
-        }
-        else if (p->window_state.resizing_x == 1 && (int)(p->width+dx) < max_x)
-        {
-            p->width += dx;
-        }
-
-        if (p->window_state.resizing_y == -1 && p->y + dy >= min_y)
-        {
-            p->y += dy;
-            p->height -= dy;
-        }
-        else if (p->window_state.resizing_y == 1 && (int)(p->height+dy) < max_y)
-        {
-            p->height += dy;
-        }
-
-        sync_window_rect(p);
-        update_text(p);
-        p->last_mouse_pos.x = mouse_x + old_x - p->x;
-        p->last_mouse_pos.y = mouse_y + old_y - p->y;
-    }
 }
 
 static LRESULT CALLBACK wnd_proc(
@@ -300,32 +107,49 @@ static LRESULT CALLBACK wnd_proc(
             break;
 
         case WM_KEYDOWN:
-            handle_key_down(p, wparam);
+            ip_handle_key_down(&p->ip, wparam);
             break;
 
         case WM_KEYUP:
-            handle_key_up(p, wparam);
+            ip_handle_key_up(&p->ip, wparam);
             break;
 
         case WM_LBUTTONDOWN:
-            handle_mouse_down(p, VK_LBUTTON, LOWORD(lparam), HIWORD(lparam));
+            ip_handle_mouse_down(
+                &p->ip, IP_MOUSE_LEFT, LOWORD(lparam), HIWORD(lparam));
+            p->mouse_captured = 1;
+            SetCapture(p->hwnd);
             break;
 
         case WM_RBUTTONDOWN:
-            handle_mouse_down(p, VK_RBUTTON, LOWORD(lparam), HIWORD(lparam));
+            ip_handle_mouse_down(
+                &p->ip, IP_MOUSE_RIGHT, LOWORD(lparam), HIWORD(lparam));
+            p->mouse_captured = 1;
+            SetCapture(p->hwnd);
             break;
 
         case WM_LBUTTONUP:
         case WM_RBUTTONUP:
-            handle_mouse_up(p);
+            ip_handle_mouse_up(&p->ip);
+            if (p->mouse_captured)
+            {
+                ReleaseCapture();
+                p->mouse_captured = 0;
+            }
             break;
 
         case WM_MOUSEMOVE:
-            handle_mouse_move(p, LOWORD(lparam), HIWORD(lparam));
+            ip_handle_mouse_move(&p->ip, LOWORD(lparam), HIWORD(lparam));
             break;
 
         default:
             return DefWindowProc(hwnd, msg, wparam, lparam);
+    }
+
+    if (p->ip.canceled)
+    {
+        ShowWindow(p->hwnd, SW_HIDE);
+        PostQuitMessage(0);
     }
 
     return 0;
@@ -371,7 +195,8 @@ static int init_window(
         class_name,
         title,
         WS_POPUPWINDOW,
-        p->x, p->y, p->width, p->height,
+        p->ip.rect.pos[0], p->ip.rect.pos[1],
+        p->ip.rect.size[0], p->ip.rect.size[1],
         NULL, NULL, 0, NULL);
 
     if (!p->hwnd)
@@ -390,7 +215,7 @@ static int init_window(
 static void run_event_loop(struct private *p)
 {
     MSG Msg;
-    while (!p->canceled && GetMessage(&Msg, NULL, 0, 0) > 0)
+    while (!p->ip.canceled && GetMessage(&Msg, NULL, 0, 0) > 0)
     {
         TranslateMessage(&Msg);
         DispatchMessage(&Msg);
@@ -404,40 +229,25 @@ int update_region_interactively(ShotRegion *region, const ShotRegion *workarea)
         return ERR_OTHER;
 
     struct private p = {
-        .keyboard_state = {
-            .ctrl = 0,
-            .shift = 0,
-        },
-        .window_state = {
-            .moving = 0,
-            .resizing_x = 0,
-            .resizing_y = 0,
-            .mouse_captured = 0,
-        },
-        .canceled = 0,
-        .workarea = workarea,
-        .x = region->x,
-        .y = region->y,
-        .width = region->width,
-        .height = region->height,
+        .mouse_captured = 0,
     };
-
-    limit_window_rect(&p);
+    ip_init(&p.ip, region, workarea);
+    p.ip.priv = &p;
 
     if (init_window(class_name, "shot", &p))
         return ERR_OTHER;
 
     run_event_loop(&p);
 
-    if (p.canceled == 1)
+    if (p.ip.canceled == 1)
         return ERR_CANCELED;
 
     //wait for window close, vsync and other blows and whistles
     Sleep(100);
 
-    region->x = p.x;
-    region->y = p.y;
-    region->width = p.width;
-    region->height = p.height;
+    region->x = p.ip.rect.pos[0];
+    region->y = p.ip.rect.pos[1];
+    region->width = p.ip.rect.size[0];
+    region->height = p.ip.rect.size[1];
     return 0;
 }
