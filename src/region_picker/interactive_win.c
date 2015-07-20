@@ -341,7 +341,7 @@ static int init_window(
     assert(p);
 
     p->hwnd = CreateWindowEx(
-        WS_EX_TOOLWINDOW | WS_EX_LAYERED,
+        WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_APPWINDOW,
         class_name,
         title,
         WS_POPUPWINDOW,
