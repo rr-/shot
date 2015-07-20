@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
@@ -6,12 +7,16 @@
 
 MonitorManager *monitor_mgr_create()
 {
+    Display *display = XOpenDisplay(NULL);
+    if (!display)
+    {
+        fprintf(stderr, "Cannot open display.\n");
+        return NULL;
+    }
+
     MonitorManager *mgr = malloc(sizeof(MonitorManager*));
     mgr->monitor_count = 0;
     mgr->monitors = NULL;
-
-    Display *display = XOpenDisplay(NULL);
-    assert(display);
 
     XRRScreenResources *screen = XRRGetScreenResources(
         display, DefaultRootWindow(display));

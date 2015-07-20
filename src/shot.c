@@ -184,17 +184,21 @@ static const char *get_random_name()
 
 int main(int argc, char **argv)
 {
-    int exit_code = 0;
+    int exit_code = 1;
+
+    ShotBitmap *bitmap = NULL;
+
     MonitorManager *monitor_mgr = monitor_mgr_create();
-    assert(monitor_mgr);
+    if (!monitor_mgr)
+    {
+        fprintf(stderr, "Failed to initialize monitor manager, aborting.\n");
+        goto end;
+    }
 
     struct ShotOptions options = parse_options(argc, argv, monitor_mgr);
 
     if (options.error != 0)
-    {
-        exit_code = options.error;
         goto end;
-    }
 
     if (!options.output_path)
         options.output_path = get_random_name();
@@ -203,17 +207,18 @@ int main(int argc, char **argv)
     {
         fprintf(stderr,
             "Cannot take screenshot with non-positive width or height.\n");
-        exit_code = 1;
         goto end;
     }
 
-    ShotBitmap *bitmap = grab_screenshot(&options.region);
+    bitmap = grab_screenshot(&options.region);
     assert(bitmap);
     if (bitmap_save_to_png(bitmap, options.output_path))
-        exit_code = 1;
-    bitmap_destroy(bitmap);
+        goto end;
+    exit_code = 0;
 
 end:
+    if (bitmap)
+        bitmap_destroy(bitmap);
     monitor_mgr_destroy(monitor_mgr);
     return exit_code;
 }
