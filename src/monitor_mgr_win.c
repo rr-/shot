@@ -14,6 +14,7 @@ static BOOL CALLBACK callback(
     assert(mgr);
 
     Monitor *monitor = monitor_create(
+        mgr->monitor_count == 0,
         rect->left,
         rect->top,
         rect->right - rect->left,

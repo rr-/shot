@@ -18,8 +18,10 @@ MonitorManager *monitor_mgr_create()
     mgr->monitor_count = 0;
     mgr->monitors = NULL;
 
-    XRRScreenResources *screen = XRRGetScreenResources(
-        display, DefaultRootWindow(display));
+    Window root = DefaultRootWindow(display);
+    RROutput primary_output = XRRGetOutputPrimary(display, root);
+
+    XRRScreenResources *screen = XRRGetScreenResources(display, root);
     assert(screen);
 
     for (int i = 0; i < screen->noutput; i++)
@@ -34,7 +36,13 @@ MonitorManager *monitor_mgr_create()
                 display, screen, output_info->crtc);
             assert(crtc_info);
 
+            int primary = 0;
+            for (int j = 0; j < crtc_info->noutput; j++)
+                if (crtc_info->outputs[j] == primary_output)
+                    primary = 1;
+
             Monitor *monitor = monitor_create(
+                primary,
                 crtc_info->x,
                 crtc_info->y,
                 crtc_info->width,

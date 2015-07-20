@@ -4,8 +4,11 @@
 #include "region_picker/errors.h"
 #include "region_picker/monitor.h"
 
-int update_region_from_all_monitors(MonitorManager *mgr, ShotRegion *region)
+int update_region_from_all_monitors(
+    ShotRegion *region, const MonitorManager *mgr)
 {
+    assert(region);
+    assert(mgr);
     int min_x = mgr->monitors[0]->x;
     int min_y = mgr->monitors[0]->y;
     for (unsigned int i = 1; i < mgr->monitor_count; i++)
@@ -31,19 +34,9 @@ int update_region_from_all_monitors(MonitorManager *mgr, ShotRegion *region)
     return 0;
 }
 
-int update_region_from_monitor(
-    MonitorManager *mgr, ShotRegion *region, unsigned int n)
+int update_region_from_monitor(ShotRegion *region, const Monitor *monitor)
 {
-    if (n >= mgr->monitor_count)
-    {
-        fprintf(
-            stderr,
-            "Invalid monitor number. Valid monitor numbers = 0..%d\n",
-            mgr->monitor_count - 1);
-        return ERR_INVALID_ARGUMENT;
-    }
-
-    Monitor *monitor = mgr->monitors[n];
+    assert(region);
     assert(monitor);
     region->x = monitor->x;
     region->y = monitor->y;

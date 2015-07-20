@@ -30,8 +30,28 @@ static void show_usage_hint(const char *program_name)
     fprintf(stderr, "Try '%s --help' for more information.\n", program_name);
 }
 
+static void init_region(ShotRegion *region, const MonitorManager *monitor_mgr)
+{
+    //if user calls -i, it should be initialized with a 640x480 window
+    region->width = 640;
+    region->height = 480;
+    region->x = 40;
+    region->y = 40;
+
+    //...and that window should be centered on the default screen
+    for (unsigned int i = 0; i < monitor_mgr->monitor_count; i++)
+    {
+        const Monitor *m = monitor_mgr->monitors[i];
+        if (m->primary)
+        {
+            region->x = m->x + (m->width - region->width) / 2;
+            region->y = m->y + (m->height - region->height) / 2;
+        }
+    }
+}
+
 static struct ShotOptions parse_options(
-    int argc, char **argv, MonitorManager *monitor_mgr)
+    int argc, char **argv, const MonitorManager *monitor_mgr)
 {
     assert(argv);
     assert(monitor_mgr);
@@ -43,13 +63,7 @@ static struct ShotOptions parse_options(
         .output_path = NULL,
     };
 
-    //if user calls --interactive, it should be initialized with a 640x480
-    //window centered on the default screen
-    Monitor *m = monitor_mgr->monitors[0];
-    options.region.width = 640;
-    options.region.height = 480;
-    options.region.x = m->x + (m->width - options.region.width) / 2;
-    options.region.y = m->y + (m->height - options.region.height) / 2;
+    init_region(&options.region, monitor_mgr);
 
     int region_result = -1;
 
@@ -95,13 +109,28 @@ static struct ShotOptions parse_options(
 
             case 'd':
                 region_result = update_region_from_all_monitors(
-                    monitor_mgr, &options.region);
+                    &options.region, monitor_mgr);
                 break;
 
             case 'm':
-                region_result = update_region_from_monitor(
-                    monitor_mgr, &options.region, atoi(optarg));
+            {
+                size_t n = atoi(optarg);
+                if (n >= monitor_mgr->monitor_count)
+                {
+                    fprintf(
+                        stderr,
+                        "Invalid monitor number."
+                        "Valid monitor numbers = 0..%d\n",
+                        monitor_mgr->monitor_count - 1);
+                    region_result = ERR_INVALID_ARGUMENT;
+                }
+                else
+                {
+                    region_result = update_region_from_monitor(
+                        &options.region, monitor_mgr->monitors[n]);
+                }
                 break;
+            }
 
             case 'r':
                 region_result = update_region_from_string(
@@ -112,7 +141,7 @@ static struct ShotOptions parse_options(
             {
                 ShotRegion working_area;
                 region_result = update_region_from_all_monitors(
-                    monitor_mgr, &working_area);
+                    &working_area, monitor_mgr);
                 assert(!region_result);
                 region_result = update_region_interactively(
                     &options.region, &working_area);
@@ -137,7 +166,7 @@ static struct ShotOptions parse_options(
     {
         //take the whole desktop
         region_result = update_region_from_all_monitors(
-            monitor_mgr, &options.region);
+            &options.region, monitor_mgr);
     }
 
     if (region_result)
