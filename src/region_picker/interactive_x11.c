@@ -94,6 +94,7 @@ static void sync_window_rect(struct private *p)
 static void update_text(struct private *p)
 {
     XClearWindow(p->xlib.display, p->xlib.window);
+    XFlush(p->xlib.display);
 
     char msg[100];
     sprintf(msg, "%dx%d+%d+%d", p->width, p->height, p->x, p->y);
@@ -287,9 +288,9 @@ static void run_event_loop(struct private *p)
                         p->xlib.display, p->xlib.window, &attrs);
                     p->border_size = attrs.border_width;
                     sync_window_rect(p);
-                    update_text(p);
                     border_fixed = 1;
                 }
+                update_text(p);
                 break;
 
             case KeyRelease:
