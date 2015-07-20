@@ -109,8 +109,15 @@ static struct ShotOptions parse_options(
                 break;
 
             case 'i':
-                region_result = update_region_interactively(&options.region);
+            {
+                ShotRegion working_area;
+                region_result = update_region_from_all_monitors(
+                    monitor_mgr, &working_area);
+                assert(!region_result);
+                region_result = update_region_interactively(
+                    &options.region, &working_area);
                 break;
+            }
 
             case 'w':
                 region_result = update_region_from_active_window(

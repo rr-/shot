@@ -367,7 +367,8 @@ static void destroy_window(struct private *p)
     XCloseDisplay(p->xlib.display);
 }
 
-int update_region_interactively(ShotRegion *region)
+int update_region_interactively(
+    ShotRegion *region, const ShotRegion *working_area)
 {
     Display *display = XOpenDisplay(NULL);
     assert(display);
