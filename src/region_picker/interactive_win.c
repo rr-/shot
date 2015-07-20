@@ -192,12 +192,15 @@ static void handle_mouse_down(
             p->window_state.resizing_y = -1;
         else if (p->last_mouse_pos.y > (int)p->height * 2/3)
             p->window_state.resizing_y = 1;
+        SetCapture(p->hwnd);
     }
 }
 
 static void handle_mouse_up(struct private *p)
 {
     assert(p);
+    if (p->window_state.resizing_x || p->window_state.resizing_y)
+        ReleaseCapture();
     p->window_state.resizing_x = 0;
     p->window_state.resizing_y = 0;
     p->window_state.moving = 0;
