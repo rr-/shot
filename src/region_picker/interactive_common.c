@@ -91,7 +91,7 @@ void ip_handle_key_up(ShotInteractivePicker *ip, int key)
     }
     else if (key == IP_KEY_LCONTROL || key == IP_KEY_RCONTROL)
     {
-            ip->keyboard_state.ctrl = 0;
+        ip->keyboard_state.ctrl = 0;
     }
 }
 
@@ -203,6 +203,12 @@ void ip_init(
     ip->rect.pos[1] = region->y;
     ip->rect.size[0] = region->width;
     ip->rect.size[1] = region->height;
+    ip->keyboard_state.ctrl = 0;
+    ip->keyboard_state.shift = 0;
+    ip->window_state.moving = 0;
+    ip->window_state.resizing[0] = 0;
+    ip->window_state.resizing[1] = 0;
+    ip->canceled = 0;
 
     const struct Rectangle *wa = &ip->workarea;
     struct Rectangle *r = &ip->rect;
