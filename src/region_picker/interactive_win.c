@@ -65,7 +65,7 @@ static void update_text(struct private *p)
 {
     RECT rect;
     GetClientRect(p->hwnd, &rect);
-    InvalidateRect(p->hwnd, &rect, FALSE);
+    InvalidateRect(p->hwnd, &rect, TRUE);
 }
 
 static void draw_text(struct private *p)
