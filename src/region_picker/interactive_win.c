@@ -36,14 +36,11 @@ struct private
     int canceled;
 };
 
-static inline int _min(int a, int b)
+static inline int limit(int a, int min, int max)
 {
-    return a < b ? a : b;
-}
-
-static inline int _max(int a, int b)
-{
-    return a > b ? a : b;
+    if (a < min) a = min;
+    if (a > max) a = max;
+    return a;
 }
 
 static void pull_window_rect(struct private *p)
@@ -57,17 +54,19 @@ static void pull_window_rect(struct private *p)
     p->height = rect.bottom - rect.top;
 }
 
+static void limit_window_rect(struct private *p)
+{
+    assert(p);
+    p->width = limit(p->width, 5, p->working_area->width);
+    p->height = limit(p->height, 5, p->working_area->height);
+    p->x = limit(p->x, p->working_area->x, p->working_area->width - p->width);
+    p->y = limit(p->y, p->working_area->y, p->working_area->height - p->height);
+}
+
 static void sync_window_rect(struct private *p)
 {
     assert(p);
-    p->width = _max(5, p->width);
-    p->height = _max(5, p->height);
-    p->x = _max(p->x, p->working_area->x);
-    p->y = _max(p->y, p->working_area->y);
-    p->x = _min(p->x, p->working_area->width - p->width);
-    p->y = _min(p->y, p->working_area->height - p->height);
-    p->width = _min(p->width, p->working_area->width);
-    p->height = _min(p->height, p->working_area->height);
+    limit_window_rect(p);
     MoveWindow(p->hwnd, p->x, p->y, p->width, p->height, TRUE);
 }
 
@@ -416,6 +415,8 @@ int update_region_interactively(
         .height = region->height,
     };
 
+    limit_window_rect(&p);
+
     if (init_window(class_name, "shot", &p))
         return ERR_OTHER;
 
@@ -429,7 +430,7 @@ int update_region_interactively(
 
     region->x = p.x;
     region->y = p.y;
-    region->width = _max(0, p.width);
-    region->height = _max(0, p.height);
+    region->width = p.width;
+    region->height = p.height;
     return 0;
 }
