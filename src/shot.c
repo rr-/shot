@@ -165,7 +165,7 @@ static struct ShotOptions parse_options(
     return options;
 }
 
-static const char *get_random_name()
+static char *get_random_name()
 {
     time_t t = time(NULL);
     struct tm *tmp = localtime(&t);
@@ -174,7 +174,7 @@ static const char *get_random_name()
     char time_str[20];
     strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", tmp);
 
-    static char name[30];
+    char *name = malloc(30);
     strcpy(name, time_str);
     strcat(name, "_");
 
@@ -189,8 +189,35 @@ static const char *get_random_name()
     return name;
 }
 
+static char *get_output_path(const char *path)
+{
+    if (!path || !*path)
+        return get_random_name();
+
+    const char *end = &path[strlen(path) - 1];
+    if (*end == '/' || *end == '\\')
+    {
+        char *random_name = get_random_name();
+        assert(random_name);
+        char *path_copy = malloc(strlen(path) + strlen(random_name) + 1);
+        assert(path_copy);
+        strcpy(path_copy, path);
+        strcat(path_copy, random_name);
+        free(random_name);
+        return path_copy;
+    }
+    else
+    {
+        char *path_copy = malloc(strlen(path) + 1);
+        assert(path_copy);
+        strcpy(path_copy, path);
+        return path_copy;
+    }
+}
+
 int main(int argc, char **argv)
 {
+    char *output_path = NULL;
     int exit_code = 1;
 
     ShotBitmap *bitmap = NULL;
@@ -207,8 +234,8 @@ int main(int argc, char **argv)
     if (options.error != 0)
         goto end;
 
-    if (!options.output_path)
-        options.output_path = get_random_name();
+    output_path = get_output_path(options.output_path);
+    assert(output_path);
 
     if (options.region.width <= 0 || options.region.height <= 0)
     {
@@ -219,11 +246,13 @@ int main(int argc, char **argv)
 
     bitmap = grab_screenshot(&options.region);
     assert(bitmap);
-    if (bitmap_save_to_png(bitmap, options.output_path))
+    if (bitmap_save_to_png(bitmap, output_path))
         goto end;
     exit_code = 0;
 
 end:
+    if (output_path)
+        free(output_path);
     if (bitmap)
         bitmap_destroy(bitmap);
     monitor_mgr_destroy(monitor_mgr);
