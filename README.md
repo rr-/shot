@@ -24,6 +24,11 @@ correct it. shot's region picker makes it easy to correct offsets even by 1px
 before actually taking the screenshot and provides visual feedback of the
 screen area.
 
+### Interactive selection in action
+
+![--interactive at its
+best](https://cloud.githubusercontent.com/assets/1045476/8808860/5908945e-2fe5-11e5-93bf-ecad1500c35b.png)
+
 ---
 
 ### Compiling for GNU/Linux
