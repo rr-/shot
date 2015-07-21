@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "help.h"
 #include "grab.h"
 #include "monitor.h"
 #include "monitor_mgr.h"
@@ -26,7 +27,7 @@ struct ShotOptions
 
 static void show_usage(void)
 {
-    printf("usage...\n");
+    printf(help_str, SHOT_VERSION);
 }
 
 static void show_usage_hint(const char *program_name)

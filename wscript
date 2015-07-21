@@ -69,8 +69,31 @@ def configure(ctx):
     configure_flags(ctx)
     configure_packages(ctx)
 
+def chunks(l, n):
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
+
+def make_help_h(path_to_src):
+    help_path = os.path.join(path_to_src, 'help.txt')
+    header_path = os.path.join(path_to_src, 'help.h')
+    with open(help_path, 'rb') as ifh:
+        with open(header_path, 'wb') as ofh:
+            ofh.write('#ifndef HELP_H\n')
+            ofh.write('#define HELP_H\n\n')
+            ofh.write('const char help_str[] = {\n')
+            bytes = list(ifh.read())
+            for chunk in chunks(bytes, 16):
+                ofh.write('    "')
+                for b in chunk:
+                    ofh.write('\\x%02x' % ord(b))
+                ofh.write('"\n')
+            ofh.write('};\n\n')
+            ofh.write('#endif\n')
+
 def build(ctx):
     path_to_src = ctx.path.find_node('src').abspath()
+
+    make_help_h(path_to_src)
 
     ctx.define('SHOT_VERSION', VERSION_LONG)
     ctx.define('_POSIX_C_SOURCE', '200809L', False)
