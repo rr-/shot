@@ -30,6 +30,19 @@ static void show_usage_hint(const char *program_name)
     fprintf(stderr, "Try '%s --help' for more information.\n", program_name);
 }
 
+static void show_monitors(const MonitorManager *monitor_mgr)
+{
+    printf("Available monitors: %d\n", monitor_mgr->monitor_count);
+    for (unsigned int i = 0; i < monitor_mgr->monitor_count; i++)
+    {
+        Monitor *m = monitor_mgr->monitors[i];
+        printf("%d - %dx%d+%d+%d", i, m->width, m->height, m->x, m->y);
+        if (m->primary)
+            printf(" (primary)");
+        puts("");
+    }
+}
+
 static void init_region(ShotRegion *region, const MonitorManager *monitor_mgr)
 {
     //if user calls -i, it should be initialized with a 640x480 window
@@ -68,6 +81,7 @@ static struct ShotOptions parse_options(
 
     const char *short_opt = "ho:r:diw";
     struct option long_opt[] = {
+        {"list",        no_argument,       NULL, 'l'},
         {"help",        no_argument,       NULL, 'h'},
         {"output",      required_argument, NULL, 'o'},
         {"region",      required_argument, NULL, 'r'},
@@ -88,6 +102,11 @@ static struct ShotOptions parse_options(
         {
             case -1:
             case 0:
+                break;
+
+            case 'l':
+                show_monitors(monitor_mgr);
+                options.error = -1;
                 break;
 
             case 'o':
