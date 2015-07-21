@@ -15,6 +15,15 @@ Make screenshots with friendly CLI.
     - specific rectangle (passed as string)
     - interactive selection with a special window
 
+### Why not scrot?
+
+To have consistent user experience between platforms I use, I wanted it
+to work on Windows as well. Additionally, I wanted manual region selection to
+be more precise - in scrot, once you select a rectangle, that's it, you can't
+correct it. shot's region picker makes it easy to correct offsets even by 1px
+before actually taking the screenshot and provides visual feedback of the
+screen area.
+
 ---
 
 ### Compiling for GNU/Linux
