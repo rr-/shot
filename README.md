@@ -5,12 +5,13 @@ Make screenshots with friendly CLI.
 
 ### Features
 
-- Windows support
-- GNU/Linux support (X11 + XRandR)
-- Versatile region selection support:
+- Cross platform:
+    - Windows
+    - GNU/Linux (X11 + XRandR)
+- Versatile region selection methods:
     - the whole desktop
-    - specific monitor
     - currently focused window
+    - specific monitor
     - specific rectangle (passed as string)
     - interactive selection with a special window
 
@@ -24,6 +25,10 @@ Make screenshots with friendly CLI.
         ./bootstrap
         ./waf configure
         ./waf
+
+3. If you wish to install it globally:
+
+        sudo ./waf install
 
 ### Cross compiling for Windows
 
