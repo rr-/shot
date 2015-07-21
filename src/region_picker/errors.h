@@ -1,0 +1,9 @@
+#ifndef REGION_PICKER_ERRORS_H
+#define REGION_PICKER_ERRORS_H
+
+#define ERR_INVALID_ARGUMENT 1
+#define ERR_NOT_IMPLEMENTED 2
+#define ERR_CANCELED 3
+#define ERR_OTHER 4
+
+#endif
