@@ -1,19 +1,18 @@
-screenshoter
-============
+shot
+====
 
 Make screenshots with friendly CLI.
 
-**Work in progress.**
-
 ### Features
 
-1. Windows support
-2. GNU/Linux support (X11 + XRandR)
-3. Taking screenshots of the whole desktop
-4. Taking screenshots of specific monitor
-5. Taking screenshots of specific region (passed as string)
-6. Taking screenshots of specific region (chosen interactively)
-7. Taking screenshots of focused window
+- Windows support
+- GNU/Linux support (X11 + XRandR)
+- Versatile region selection support:
+    - the whole desktop
+    - specific monitor
+    - currently focused window
+    - specific rectangle (passed as string)
+    - interactive selection with a special window
 
 ---
 
