@@ -27,7 +27,12 @@ struct ShotOptions
 
 static void show_usage(void)
 {
-    printf(help_str, SHOT_VERSION);
+    printf(help_str);
+}
+
+static void show_version(void)
+{
+    printf("shot v%s\n", SHOT_VERSION);
 }
 
 static void show_usage_hint(const char *program_name)
@@ -84,7 +89,7 @@ static struct ShotOptions parse_options(
 
     int region_result = -1;
 
-    const char *short_opt = "ho:r:diw";
+    const char *short_opt = "ho:r:diwv";
     struct option long_opt[] = {
         {"list",        no_argument,       NULL, 'l'},
         {"help",        no_argument,       NULL, 'h'},
@@ -94,6 +99,7 @@ static struct ShotOptions parse_options(
         {"desktop",     no_argument,       NULL, 'd'},
         {"interactive", no_argument,       NULL, 'i'},
         {"window",      no_argument,       NULL, 'w'},
+        {"version",     no_argument,       NULL, 'v'},
         {NULL,          0,                 NULL, 0}
     };
 
@@ -107,6 +113,11 @@ static struct ShotOptions parse_options(
         {
             case -1:
             case 0:
+                break;
+
+            case 'v':
+                show_version();
+                options.status = STATUS_EXIT_NO_ERROR;
                 break;
 
             case 'h':

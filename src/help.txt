@@ -1,28 +1,29 @@
-shot v%s
+Usage: shot [options]
 Takes screenshots of your desktop.
 
-Available options
+Basic options
 
-    -h, --help          shows this help.
-    -o, --output PATH   saves the target image in PATH. The default file name
-                        is of the form yyyymmdd_hhiiss_rrr.png, where "r" is a
-                        random character (example: 20150721_103014_ukd.png).
+    -h, --help          Shows this help.
+    -o, --output PATH   Saves the target image in PATH. The default file name
+                        is of the form "yyyymmdd_hhiiss_rrr.png", where "r" is
+                        a random character (example: 20150721_103014_ukd.png).
                         If the PATH ends with /, it will be appended with
                         default file name. Target directory needs to exist
                         prior to invocation.
                         Currently, only PNG format is supported.
         --list          Lists all monitors and exits.
+    -v, --version       Shows shot's version and exists.
 
 Options specific to screenshot regions
 
     By default, the region is equivalent to --desktop.
 
-    -r, --region REGION take region from string. REGION needs to be of form
+    -r, --region REGION Takes region from string. REGION needs to be of form
                         WIDTHxHEIGHT+X+Y or WIDTHxHEIGHT.
-    -m, --monitor NUM   take region from NUM-th monitor.
-    -d, --desktop       take region from the area bounding all monitors.
-    -w, --window        take region from the currently active window.
-    -i, --interactive   create a resizable and movable window, whose final
+    -m, --monitor NUM   Takes region from NUM-th monitor.
+    -d, --desktop       Takes region from the area bounding all monitors.
+    -w, --window        Takes region from the currently active window.
+    -i, --interactive   Creates a resizable and movable window, whose final
                         position and size will be used to derive the region.
 
 Controlling interactive region picker
@@ -31,26 +32,26 @@ Controlling interactive region picker
     and resized with right mouse button. Following keyboard shortcuts are also
     available:
 
-        h, left             move left by DELTA
-        k, up               move up by DELTA
-        j, down             move down by DELTA
-        l, right            move right by DELTA
+        h, left             Moves left by DELTA.
+        k, up               Moves up by DELTA.
+        j, down             Moves down by DELTA.
+        l, right            Moves right by DELTA.
 
-        ctrl+h, ctrl+left   shrink horizontally by DELTA
-        ctrl+k, ctrl+up     shrink vertically by DELTA
-        ctrl+j, ctrl+down   grow horizontally by DELTA
-        ctrl+l, ctrl+right  grow vertically by DELTA
+        ctrl+h, ctrl+left   Shrink horizontally by DELTA.
+        ctrl+k, ctrl+up     Shrink vertically by DELTA.
+        ctrl+j, ctrl+down   Grow horizontally by DELTA.
+        ctrl+l, ctrl+right  Grow vertically by DELTA.
 
-        esc, q              cancel (exit without taking a screenshot)
-        enter               confirm selection
+        esc, q              Cancels (exits without taking a screenshot).
+        enter               Confirms selection and takes a screenshot.
 
-    DELTA is 25px and 1px when shift key is pressed.
+    DELTA is equal to 25px and 1px when shift key is pressed.
 
-    The interactive region starts with a 640x480 rectangle centered on the
-    primary monitor by default. The initial size and location of interactive
-    picker can be controlled by prepending other region arguments before -i.
-    For example, "shot -w -i" will create interactive region picker whose
-    initial location and size is set to that of the currently focused window.
+    By default, the interactive region picker starts with a 640x480 rectangle
+    centered on the primary monitor. This can be controlled by prepending other
+    region arguments before -i. For example, "shot -w -i" will create
+    interactive region picker whose initial location and size is set to that of
+    the currently focused window.
 
 Examples
 
