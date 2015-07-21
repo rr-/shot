@@ -13,9 +13,13 @@
 #include "region_picker/monitor.h"
 #include "region_picker/string.h"
 
+#define STATUS_CONTINUE 0
+#define STATUS_EXIT_ERROR 1
+#define STATUS_EXIT_NO_ERROR 2
+
 struct ShotOptions
 {
-    int error;
+    int status;
     const char *output_path;
     ShotRegion region;
 };
@@ -71,7 +75,7 @@ static struct ShotOptions parse_options(
     assert(monitor_mgr->monitor_count);
 
     struct ShotOptions options = {
-        .error = 0,
+        .status = STATUS_CONTINUE,
         .output_path = NULL,
     };
 
@@ -92,7 +96,7 @@ static struct ShotOptions parse_options(
         {NULL,          0,                 NULL, 0}
     };
 
-    while (!options.error)
+    while (options.status == STATUS_CONTINUE)
     {
         int c = getopt_long(argc, argv, short_opt, long_opt, NULL);
         if (c == -1)
@@ -104,24 +108,24 @@ static struct ShotOptions parse_options(
             case 0:
                 break;
 
-            case 'l':
-                show_monitors(monitor_mgr);
-                options.error = -1;
-                break;
-
-            case 'o':
-                options.output_path = optarg;
-                break;
-
             case 'h':
                 show_usage();
-                options.error = -1;
+                options.status = STATUS_EXIT_NO_ERROR;
                 break;
 
             case ':':
             case '?':
                 show_usage_hint(argv[0]);
-                options.error = 1;
+                options.status = STATUS_EXIT_ERROR;
+                break;
+
+            case 'l':
+                show_monitors(monitor_mgr);
+                options.status = STATUS_EXIT_NO_ERROR;
+                break;
+
+            case 'o':
+                options.output_path = optarg;
                 break;
 
             case 'd':
@@ -173,7 +177,7 @@ static struct ShotOptions parse_options(
             default:
                 fprintf(stderr, "%s: invalid option -- '%c'\n", argv[0], c);
                 show_usage_hint(argv[0]);
-                options.error = 1;
+                options.status = STATUS_EXIT_ERROR;
                 break;
         }
     }
@@ -205,7 +209,7 @@ static struct ShotOptions parse_options(
         {
             fprintf(stderr, "An error occurred, aborting.\n");
         }
-        options.error = 1;
+        options.status = STATUS_EXIT_ERROR;
     }
 
     return options;
@@ -277,8 +281,15 @@ int main(int argc, char **argv)
 
     struct ShotOptions options = parse_options(argc, argv, monitor_mgr);
 
-    if (options.error != 0)
+    if (options.status == STATUS_EXIT_ERROR)
+    {
         goto end;
+    }
+    else if (options.status == STATUS_EXIT_NO_ERROR)
+    {
+        exit_code = 0;
+        goto end;
+    }
 
     output_path = get_output_path(options.output_path);
     assert(output_path);
