@@ -74,7 +74,7 @@ def chunks(l, n):
         yield l[i:i+n]
 
 def make_help_h(path_to_src):
-    help_path = os.path.join(path_to_src, 'help.txt')
+    help_path = os.path.join(path_to_src, '..', 'docs', 'help.txt')
     header_path = os.path.join(path_to_src, 'help.h')
     with open(help_path, 'r') as ifh:
         with open(header_path, 'w') as ofh:
