@@ -146,10 +146,8 @@ void ip_handle_mouse_move(
         for (int i = 0; i < 2; i++)
         {
             r->pos[i] += mouse_pos[i] - ip->last_mouse_pos[i];
-            if (r->pos[i] < wa->pos[i])
-                r->pos[i] = wa->pos[i];
-            if (r->pos[i] > wa->pos[i] + wa->size[i] - r->size[i])
-                r->pos[i] = wa->pos[i] + wa->size[i] - r->size[i];
+            _max(&r->pos[i], wa->pos[i]);
+            _min(&r->pos[i], wa->pos[i] + wa->size[i] - r->size[i]);
         }
         ip_sync_window_rect(ip);
         ip_update_text(ip);
