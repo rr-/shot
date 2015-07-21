@@ -10,10 +10,10 @@ except:
     VERSION = '0.0'
     VERSION_LONG = '?'
 
-def options(ctx):
-    ctx.load('compiler_c')
+def options(opt):
+    opt.load('compiler_c')
 
-    ctx.add_option(
+    opt.add_option(
         '-d',
         '--debug',
         dest = 'debug',
@@ -21,53 +21,53 @@ def options(ctx):
         action = 'store_true',
         help = 'enable emitting debug information')
 
-def configure_flags(ctx):
-    ctx.load('compiler_c')
+def configure_flags(conf):
+    conf.load('compiler_c')
 
-    ctx.env.CFLAGS = [
+    conf.env.CFLAGS = [
         '-std=c99',
         '-Wall',
         '-Wextra',
         '-pedantic-errors']
 
-    if ctx.options.debug:
-        ctx.env.CFLAGS += ['-ggdb']
+    if conf.options.debug:
+        conf.env.CFLAGS += ['-ggdb']
         Logs.info('Debug information enabled')
     else:
         Logs.info('Debug information disabled, pass -d to enable')
 
-def configure_packages(ctx):
-    ctx.check_cfg(
+def configure_packages(conf):
+    conf.check_cfg(
         package = 'libpng',
         args = '--cflags --libs',
         uselib_store = 'LIBPNG',
         global_define = True,
         mandatory = True)
 
-    ctx.check_cfg(
+    conf.check_cfg(
         package = 'x11',
         args = '--cflags --libs',
         uselib_store = 'LIBX11',
         global_define = True,
         mandatory = False)
 
-    ctx.check_cfg(
+    conf.check_cfg(
         package = 'xrandr',
         args = '--cflags --libs',
         uselib_store = 'LIBXRANDR',
         global_define = True,
         mandatory = False)
 
-    ctx.check(
+    conf.check(
         lib = 'gdi32',
         args = '--cflags --libs',
         uselib_store = 'LIBGDI32',
         define_name = 'HAVE_GDI32',
         mandatory = False)
 
-def configure(ctx):
-    configure_flags(ctx)
-    configure_packages(ctx)
+def configure(conf):
+    configure_flags(conf)
+    configure_packages(conf)
 
 def chunks(l, n):
     for i in range(0, len(l), n):
@@ -90,35 +90,37 @@ def make_help_h(path_to_src):
             ofh.write('};\n\n')
             ofh.write('#endif\n')
 
-def build(ctx):
-    path_to_src = ctx.path.find_node('src').abspath()
+def build(bld):
+    path_to_src = bld.path.find_node('src').abspath()
 
     make_help_h(path_to_src)
 
-    ctx.define('SHOT_VERSION', VERSION_LONG)
-    ctx.define('_POSIX_C_SOURCE', '200809L', False)
+    bld.define('SHOT_VERSION', VERSION_LONG)
+    bld.define('_POSIX_C_SOURCE', '200809L', False)
 
-    ctx.env.CFLAGS += ['-iquote', path_to_src]
-    if ctx.is_defined('HAVE_GDI32'):
-        ctx.env.LINKFLAGS += ['-mwindows']
+    bld.env.CFLAGS += ['-iquote', path_to_src]
+    if bld.is_defined('HAVE_GDI32'):
+        bld.env.LINKFLAGS += ['-mwindows']
 
-    all_sources = ctx.path.ant_glob('src/**/*.c')
-    x11_sources = ctx.path.ant_glob('src/**/*x11.c')
-    win_sources = ctx.path.ant_glob('src/**/*win.c')
+    bld.install_files("${PREFIX}/share/man/man1", 'docs/shot.1')
+
+    all_sources = bld.path.ant_glob('src/**/*.c')
+    x11_sources = bld.path.ant_glob('src/**/*x11.c')
+    win_sources = bld.path.ant_glob('src/**/*win.c')
     sources = list(set(all_sources) - set(x11_sources) - set(win_sources))
 
-    if ctx.is_defined('HAVE_GDI32'):
-        ctx.objects(
+    if bld.is_defined('HAVE_GDI32'):
+        bld.objects(
             source = win_sources,
             target = 'shot_win',
             use = [ 'LIBGDI32' ])
-    elif ctx.is_defined('HAVE_X11'):
-        ctx.objects(
+    elif bld.is_defined('HAVE_X11'):
+        bld.objects(
             source = x11_sources,
             target = 'shot_x11',
             use = [ 'LIBX11', 'LIBXRANDR' ])
 
-    ctx.program(
+    bld.program(
         source = sources,
         target = 'shot',
         use = [ 'shot_x11', 'shot_win', 'LIBPNG' ])

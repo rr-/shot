@@ -1,0 +1,110 @@
+.TH SHOT "1" "July 2015" "shot" "User Commands"
+.SH NAME
+shot \- manual page for shot
+.SH SYNOPSIS
+.B shot
+[\fI\,options\/\fR]
+.PP
+.SH DESCRIPTION
+Takes screenshots of your desktop.
+.SH BASIC OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Shows this help.
+.TP
+\fB\-o\fR, \fB\-\-output\fR PATH
+Saves the target image in PATH. The default file name is of the form
+"\fByyyymmdd_hhiiss_rrr.png\fR", where "\fBr\fR" is a random character (example:
+\fB20150721_103014_ukd.png\fR). If the PATH ends with \fB/\fR, it will be
+appended with default file name. Target directory needs to exist prior to
+invocation.
+Currently, only PNG format is supported.
+.TP
+\fB\-\-list\fR
+Lists all monitors and exits.
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+Shows shot's version and exits.
+.SH REGION OPTIONS
+.PP
+By default, the region is equivalent to \fB\-\-desktop\fR.
+.TP
+\fB\-r\fR, \fB\-\-region REGION\fR
+Takes region from string. \fBREGION\fR needs
+to be of form \fBWIDTHxHEIGHT+X+Y\fR or \fBWIDTHxHEIGHT\fR.
+.TP
+\fB\-m\fR, \fB\-\-monitor NUM\fR
+Takes region from \fBNUM\fR\-th monitor.
+.TP
+\fB\-d\fR, \fB\-\-desktop\fR
+Takes region from the area bounding all monitors.
+.TP
+\fB\-w\fR, \fB\-\-window\fR
+Takes region from the currently active window.
+.TP
+\fB\-i\fR, \fB\-\-interactive\fR
+Creates a resizable and movable window, whose final position and size will be
+used to derive the region.
+.SH
+INTERACTIVE REGION PICKER CONTROL
+.PP
+The interactive region picker's window can be moved with left mouse button
+and resized with right mouse button. Following keyboard shortcuts are also
+available:
+.TP
+\fBH\fR or \fBLEFT\fR
+Moves left by \fIDELTA\fR.
+.TP
+\fBJ\fR or \fBDOWN\fR
+Moves down by \fIDELTA\fR.
+.TP
+\fBK\fR or \fBUP\fR
+Moves up by \fIDELTA\fR.
+.TP
+\fBL\fR or \fBRIGHT\fR
+Moves right by \fIDELTA\fR.
+.TP
+\fBCTRL+H\fR or \fBCTRL+LEFT\fR
+Shrinks horizontally by \fIDELTA\fR.
+.TP
+\fBCTRL+J\fR or \fBCTRL+DOWN\fR
+Grows horizontally by \fIDELTA\fR.
+.TP
+\fBCTRL+K\fR or \fBCTRL+UP\fR
+Shrinks vertically by \fIDELTA\fR.
+.TP
+\fBCTRL+L\fR or \fBCTRL+RIGHT\fR
+Grows vertically by \fIDELTA\fR.
+.TP
+\fBQ\fR or \fBESCAPE\fR
+Cancels (exits without taking a screenshot).
+.TP
+\fBENTER\fR
+Confirms selection and takes a screenshot.
+.PP
+\fIDELTA\fR is 25px and 1px when \fBSHIFT\fR key is pressed.
+.PP
+By default, the interactive region picker starts with a 640x480 rectangle
+centered on the primary monitor. This can be controlled by prepending other
+region arguments before \fB\-i\fR. For example, "\fBshot \-w \-i\fR" will
+create interactive region picker whose initial location and size is set to that
+of the currently focused window.
+.SH EXAMPLES
+.B shot
+.IP
+Takes a screenshot of the area bounding all available monitors.
+.TP
+.B shot \-\-list
+.IP
+Doesn't take a screenshot and lists monitors instead.
+.P
+.B shot \-w \-\-output=/home/sseagal/
+.IP
+Takes a screenshot of focused window and saves it to \fB/home/sseagal/\fR.
+.SH BUG REPORTS
+All bug reports and feature should go to the GitHub page which is available at
+\fIhttps://github.com/rr-/shot\fR.
+.SH AUTHORS
+Written by Marcin Kurczewski.
+.SH COPYRIGHT
+MIT.
