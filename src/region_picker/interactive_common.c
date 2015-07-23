@@ -167,16 +167,16 @@ void ip_handle_mouse_move(
                 int npos = r->pos[i] + mouse_delta[i];
                 _max(&npos, wa->pos[i]);
                 _min(&npos, wa->pos[i] + wa->size[i] - r->size[i]);
-                int nsize = ip->rect.size[i] + old_pos[i] - npos;
+                int nsize = r->size[i] + old_pos[i] - npos;
                 _max(&nsize, MIN_SIZE);
                 _min(&nsize, wa->pos[i] + wa->size[i] - r->pos[i]);
-                npos = ip->rect.size[i] + old_pos[i] - nsize;
-                ip->rect.size[i] = nsize;
+                npos = r->size[i] + old_pos[i] - nsize;
+                r->size[i] = nsize;
                 r->pos[i] = npos;
             }
             else if (ip->window_state.resizing[i] == 1)
             {
-                ip->rect.size[i] += mouse_delta[i];
+                r->size[i] += mouse_delta[i];
                 _max(&r->size[i], MIN_SIZE);
                 _min(&r->size[i], wa->pos[i] + wa->size[i] - r->pos[i]);
             }
@@ -197,10 +197,6 @@ void ip_init(
     ip->workarea.pos[1] = workarea->y;
     ip->workarea.size[0] = workarea->width;
     ip->workarea.size[1] = workarea->height;
-    ip->rect.pos[0] = region->x;
-    ip->rect.pos[1] = region->y;
-    ip->rect.size[0] = region->width;
-    ip->rect.size[1] = region->height;
     ip->keyboard_state.ctrl = 0;
     ip->keyboard_state.shift = 0;
     ip->window_state.moving = 0;
@@ -210,11 +206,18 @@ void ip_init(
 
     const struct Rectangle *wa = &ip->workarea;
     struct Rectangle *r = &ip->rect;
+    r->pos[0] = region->x;
+    r->pos[1] = region->y;
+    r->size[0] = region->width;
+    r->size[1] = region->height;
     for (int i = 0; i < 2; i++)
     {
+        if (r->pos[i] < wa->pos[i])
+        {
+            r->size[i] = r->size[i] - wa->pos[i] + r->pos[i];
+            r->pos[i] = wa->pos[i];
+        }
         _max(&r->size[i], MIN_SIZE);
         _min(&r->size[i], wa->pos[i] + wa->size[i] - r->pos[i]);
-        _max(&r->pos[i], wa->pos[i]);
-        _min(&r->pos[i], wa->pos[i] + wa->size[i] - r->size[i]);
     }
 }
