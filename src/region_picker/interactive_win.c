@@ -28,6 +28,7 @@ struct private
     int mouse_captured;
     HWND hwnd;
     ShotInteractivePicker ip;
+    unsigned int border_size;
 };
 
 void ip_pull_window_rect(ShotInteractivePicker *ip)
@@ -37,10 +38,10 @@ void ip_pull_window_rect(ShotInteractivePicker *ip)
     struct private *priv = ip->priv;
     RECT rect;
     GetWindowRect(priv->hwnd, &rect);
-    ip->rect.pos[0] = rect.left;
-    ip->rect.pos[1] = rect.top;
-    ip->rect.size[0] = rect.right - rect.left;
-    ip->rect.size[1] = rect.bottom - rect.top;
+    ip->rect.pos[0] = rect.left + priv->border_size;
+    ip->rect.pos[1] = rect.top + priv->border_size;
+    ip->rect.size[0] = rect.right - rect.left - 2 * priv->border_size;
+    ip->rect.size[1] = rect.bottom - rect.top - 2 * priv->border_size;
 }
 
 void ip_sync_window_rect(ShotInteractivePicker *ip)
@@ -49,8 +50,10 @@ void ip_sync_window_rect(ShotInteractivePicker *ip)
     struct private *priv = ip->priv;
     MoveWindow(
         priv->hwnd,
-        ip->rect.pos[0], ip->rect.pos[1],
-        ip->rect.size[0], ip->rect.size[1],
+        ip->rect.pos[0] - priv->border_size,
+        ip->rect.pos[1] - priv->border_size,
+        ip->rect.size[0] + 2 * priv->border_size,
+        ip->rect.size[1] + 2 * priv->border_size,
         TRUE);
 }
 
@@ -198,8 +201,10 @@ static int init_window(
         class_name,
         title,
         WS_POPUPWINDOW,
-        p->ip.rect.pos[0], p->ip.rect.pos[1],
-        p->ip.rect.size[0], p->ip.rect.size[1],
+        p->ip.rect.pos[0] - p->border_size,
+        p->ip.rect.pos[1] - p->border_size,
+        p->ip.rect.size[0] + 2 * p->border_size,
+        p->ip.rect.size[1] + 2 * p->border_size,
         NULL, NULL, 0, NULL);
 
     if (!p->hwnd)
@@ -233,6 +238,7 @@ int update_region_interactively(ShotRegion *region, const ShotRegion *workarea)
 
     struct private p = {
         .mouse_captured = 0,
+        .border_size = 1,
     };
     ip_init(&p.ip, region, workarea);
     p.ip.priv = &p;
