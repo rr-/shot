@@ -185,6 +185,12 @@ static int init_window(struct private *p)
         0, visual.depth, InputOutput, visual.visual,
         CWBackPixel | CWColormap | CWBorderPixel, &attrs);
 
+    if (!p->window)
+    {
+        fprintf(stderr, "Couldn\'t create window\n");
+        return -1;
+    }
+
     // make floating
     {
         Atom type = XInternAtom(p->display, "_NET_WM_WINDOW_TYPE", False);
