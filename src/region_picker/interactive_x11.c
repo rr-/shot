@@ -191,6 +191,8 @@ static int init_window(struct private *p)
         return -1;
     }
 
+    XStoreName(p->display, p->window, "shot");
+
     // make floating
     {
         Atom type = XInternAtom(p->display, "_NET_WM_WINDOW_TYPE", False);
