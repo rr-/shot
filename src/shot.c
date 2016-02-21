@@ -152,7 +152,7 @@ static struct ShotOptions parse_options(
                 {
                     fprintf(
                         stderr,
-                        "Invalid monitor number."
+                        "Invalid monitor number. "
                         "Valid monitor numbers = 0..%d\n",
                         monitor_mgr->monitor_count - 1);
                     region_result = ERR_INVALID_ARGUMENT;
