@@ -89,7 +89,7 @@ static struct ShotOptions parse_options(
 
     int region_result = -1;
 
-    const char *short_opt = "ho:r:diwv";
+    const char *short_opt = "ho:r:diwvm:l";
     struct option long_opt[] = {
         {"list",        no_argument,       NULL, 'l'},
         {"help",        no_argument,       NULL, 'h'},
