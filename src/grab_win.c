@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <Windows.h>
+#include <windows.h>
 #include "grab.h"
 
 ShotBitmap *grab_screenshot(ShotRegion *region)

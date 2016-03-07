@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
-#include <Windows.h>
+#include <windows.h>
 #include "region_picker/errors.h"
 #include "region_picker/interactive.h"
 #include "region_picker/interactive_common.h"

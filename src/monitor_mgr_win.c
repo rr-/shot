@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <Windows.h>
+#include <windows.h>
 #include "monitor_mgr.h"
 
 #define UNUSED(x) (void)(x)

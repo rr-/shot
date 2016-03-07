@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include <windows.h>
 #include "region_picker/errors.h"
 #include "region_picker/active_window.h"
 
