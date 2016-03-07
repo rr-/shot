@@ -39,7 +39,7 @@ Takes region from \fBNUM\fR\-th monitor.
 \fB\-d\fR, \fB\-\-desktop\fR
 Takes region from the area bounding all monitors.
 .TP
-\fB\-w\fR, \fB\-\-window\fR
+\fB\-W\fR, \fB\-\-active\-window\fR
 Takes region from the currently active window.
 .TP
 \fB\-i\fR, \fB\-\-interactive\fR
@@ -86,7 +86,7 @@ Confirms selection and takes a screenshot.
 .PP
 By default, the interactive region picker starts with a 640x480 rectangle
 centered on the primary monitor. This can be controlled by prepending other
-region arguments before \fB\-i\fR. For example, "\fBshot \-w \-i\fR" will
+region arguments before \fB\-i\fR. For example, "\fBshot \-W \-i\fR" will
 create interactive region picker whose initial location and size is set to that
 of the currently focused window.
 .SH EXAMPLES
@@ -98,7 +98,7 @@ Takes a screenshot of the area bounding all available monitors.
 .IP
 Doesn't take a screenshot and lists monitors instead.
 .P
-.B shot \-w \-\-output=/home/sseagal/
+.B shot \-W \-\-output=/home/sseagal/
 .IP
 Takes a screenshot of focused window and saves it to \fB/home/sseagal/\fR.
 .SH BUG REPORTS

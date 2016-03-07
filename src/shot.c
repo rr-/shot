@@ -89,18 +89,18 @@ static struct ShotOptions parse_options(
 
     int region_result = -1;
 
-    const char *short_opt = "ho:r:diwvm:l";
+    const char *short_opt = "ho:r:diWvm:l";
     struct option long_opt[] = {
-        {"list",        no_argument,       NULL, 'l'},
-        {"help",        no_argument,       NULL, 'h'},
-        {"output",      required_argument, NULL, 'o'},
-        {"region",      required_argument, NULL, 'r'},
-        {"monitor",     required_argument, NULL, 'm'},
-        {"desktop",     no_argument,       NULL, 'd'},
-        {"interactive", no_argument,       NULL, 'i'},
-        {"window",      no_argument,       NULL, 'w'},
-        {"version",     no_argument,       NULL, 'v'},
-        {NULL,          0,                 NULL, 0}
+        {"list",          no_argument,       NULL, 'l'},
+        {"help",          no_argument,       NULL, 'h'},
+        {"output",        required_argument, NULL, 'o'},
+        {"region",        required_argument, NULL, 'r'},
+        {"monitor",       required_argument, NULL, 'm'},
+        {"desktop",       no_argument,       NULL, 'd'},
+        {"interactive",   no_argument,       NULL, 'i'},
+        {"active-window", no_argument,       NULL, 'W'},
+        {"version",       no_argument,       NULL, 'v'},
+        {NULL,            0,                 NULL, 0}
     };
 
     while (options.status == STATUS_CONTINUE)
@@ -181,7 +181,7 @@ static struct ShotOptions parse_options(
                 break;
             }
 
-            case 'w':
+            case 'W':
                 region_result = update_region_from_active_window(
                     &options.region);
                 break;
