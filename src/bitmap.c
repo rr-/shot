@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <stdlib.h>
 #include <png.h>
+#include <stdlib.h>
 #include "bitmap.h"
 
 ShotBitmap *bitmap_create(unsigned int width, unsigned int height)

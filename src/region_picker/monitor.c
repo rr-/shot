@@ -1,6 +1,4 @@
 #include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "region_picker/errors.h"
 #include "region_picker/monitor.h"
 

@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
 #include "region_picker/interactive_common.h"
 
 #define MIN_SIZE 30
