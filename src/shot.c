@@ -14,6 +14,7 @@
 #include "region_picker/interactive.h"
 #include "region_picker/monitor.h"
 #include "region_picker/string.h"
+#include "region_picker/window.h"
 
 #define STATUS_CONTINUE 0
 #define STATUS_EXIT_ERROR 1
@@ -90,13 +91,14 @@ static struct ShotOptions parse_options(
 
     int region_result = -1;
 
-    const char *short_opt = "ho:r:diWvm:Ml";
+    const char *short_opt = "ho:r:diw:Wvm:Ml";
     struct option long_opt[] = {
         {"list",           no_argument,       NULL, 'l'},
         {"help",           no_argument,       NULL, 'h'},
         {"output",         required_argument, NULL, 'o'},
         {"region",         required_argument, NULL, 'r'},
         {"monitor",        required_argument, NULL, 'm'},
+        {"window",         required_argument, NULL, 'w'},
         {"desktop",        no_argument,       NULL, 'd'},
         {"interactive",    no_argument,       NULL, 'i'},
         {"active-monitor", no_argument,       NULL, 'M'},
@@ -187,6 +189,13 @@ static struct ShotOptions parse_options(
                 assert(!region_result);
                 region_result = update_region_interactively(
                     &options.region, &working_area);
+                break;
+            }
+
+            case 'w':
+            {
+                long int n = atoi(optarg);
+                region_result = update_region_from_window(&options.region, n);
                 break;
             }
 
