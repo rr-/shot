@@ -3,6 +3,8 @@ shot
 
 Make screenshots with friendly CLI.
 
+Download for Windows: [*Github Releases*](https://github.com/rr-/shot/releases)
+
 ### Features
 
 - Cross platform:
@@ -16,6 +18,7 @@ Make screenshots with friendly CLI.
     - specific window
     - specific rectangle (passed as string)
     - interactive selection with a special window
+- Ideal to put under a hotkey
 
 ### Why not scrot?
 
