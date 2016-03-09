@@ -11,7 +11,9 @@ Make screenshots with friendly CLI.
 - Versatile region selection methods:
     - the whole desktop
     - currently focused window
+    - currently focused monitor (established by focused window)
     - specific monitor
+    - specific window
     - specific rectangle (passed as string)
     - interactive selection with a special window
 
