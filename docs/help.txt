@@ -18,13 +18,15 @@ Options specific to screenshot regions
 
     By default, the region is equivalent to --desktop.
 
-    -r, --region REGION Takes region from string. REGION needs to be of form
-                        WIDTHxHEIGHT+X+Y or WIDTHxHEIGHT.
-    -m, --monitor NUM   Takes region from NUM-th monitor.
-    -d, --desktop       Takes region from the area bounding all monitors.
-    -w, --window        Takes region from the currently active window.
-    -i, --interactive   Creates a resizable and movable window, whose final
-                        position and size will be used to derive the region.
+    -d, --desktop        Takes region from the area bounding all monitors.
+    -r, --region REGION  Takes region from string. REGION needs to be of form
+                         WIDTHxHEIGHT+X+Y or WIDTHxHEIGHT.
+    -m, --monitor NUM    Takes region from NUM-th monitor.
+    -w, --window NUM     Takes region from window with id NUM.
+    -M, --active-monitor Takes region from the currently active monitor.
+    -W, --active-window  Takes region from the currently active window.
+    -i, --interactive    Creates a resizable and movable window, whose final
+                         position and size will be used to derive the region.
 
 Controlling interactive region picker
 
@@ -49,7 +51,7 @@ Controlling interactive region picker
 
     By default, the interactive region picker starts with a 640x480 rectangle
     centered on the primary monitor. This can be controlled by prepending other
-    region arguments before -i. For example, "shot -w -i" will create
+    region arguments before -i. For example, "shot -W -i" will create
     interactive region picker whose initial location and size is set to that of
     the currently focused window.
 
@@ -63,6 +65,6 @@ Examples
 
         Doesn't take a screenshot and lists monitors instead.
 
-    shot -w --output=/home/sseagal/
+    shot -W --output=/home/sseagal/
 
         Takes a screenshot of focused window and saves it to /home/sseagal/.
