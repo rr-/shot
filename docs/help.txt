@@ -39,15 +39,15 @@ Controlling interactive region picker
         j, down             Moves down by DELTA.
         l, right            Moves right by DELTA.
 
-        ctrl+h, ctrl+left   Shrink horizontally by DELTA.
-        ctrl+k, ctrl+up     Shrink vertically by DELTA.
-        ctrl+j, ctrl+down   Grow horizontally by DELTA.
-        ctrl+l, ctrl+right  Grow vertically by DELTA.
+        ctrl+h, ctrl+left   Shrinks horizontally by DELTA.
+        ctrl+k, ctrl+up     Shrinks vertically by DELTA.
+        ctrl+j, ctrl+down   Grows horizontally by DELTA.
+        ctrl+l, ctrl+right  Grows vertically by DELTA.
 
         esc, q              Cancels (exits without taking a screenshot).
         enter               Confirms selection and takes a screenshot.
 
-    DELTA is equal to 25px and 1px when shift key is pressed.
+    DELTA is equal to 25px by default, and 1px when shift key is pressed.
 
     By default, the interactive region picker starts with a 640x480 rectangle
     centered on the primary monitor. This can be controlled by prepending other
