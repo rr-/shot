@@ -15,6 +15,7 @@
 #include "region_picker/monitor.h"
 #include "region_picker/string.h"
 #include "region_picker/window.h"
+#include "version.h"
 
 #define STATUS_CONTINUE 0
 #define STATUS_EXIT_ERROR 1
@@ -34,7 +35,7 @@ static void show_usage(void)
 
 static void show_version(void)
 {
-    printf("shot v%s\n", SHOT_VERSION);
+    printf("shot v%s\n", version_long);
 }
 
 static void show_usage_hint(const char *program_name)

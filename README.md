@@ -38,32 +38,27 @@ best](https://cloud.githubusercontent.com/assets/1045476/8808860/5908945e-2fe5-1
 
 ### Compiling for GNU/Linux
 
-1. Install libpng.
+1. Install `libpng`.
 2. Run following:
 
-        ./bootstrap
-        ./waf configure
-        ./waf
+        mkdir build && cd build
+        cmake ..
+        make
 
 3. If you wish to install it globally:
 
-        sudo ./waf install
+        sudo make install
 
 ### Cross compiling for Windows
 
-1. Install [`mxe`](https://github.com/mxe/mxe) and compile libpng:
+1. Install [`mxe`](https://github.com/mxe/mxe) and compile `libpng` and `cmake`:
 
         git clone https://github.com/mxe/mxe.git
         cd mxe
-        make libpng
+        make libpng cmake
 
-2. Configure the shell to use `mxe`:
+2. Compile with `mxe`:
 
-        MXE_PATH=~/src/mxe/
-        CROSS=i686-w64-mingw32.static-
-        export PATH="$MXE_PATH/usr/bin/:$PATH"
-        export CC=${CROSS}gcc
-        export AR=${CROSS}ar
-        export PKGCONFIG=${CROSS}pkg-config
-
-3. Compile the project the regular way.
+        mkdir build && cd build
+        ~/path/to/mxe/usr/bin/i686-w64-mingw32.static-cmake ..
+        make
