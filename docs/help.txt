@@ -6,7 +6,8 @@ Basic options
     -h, --help          Shows this help.
     -o, --output PATH   Saves the target image in PATH. The default file name
                         is of the form "yyyymmdd_hhiiss_rrr.png", where "r" is
-                        a random character (example: 20150721_103014_ukd.png).
+                        a random character (example: 20150721_103014_ukd.png),
+                        and the file is placed in current working directory.
                         If the PATH ends with /, it will be appended with
                         default file name. Target directory needs to exist
                         prior to invocation.
