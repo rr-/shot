@@ -16,7 +16,7 @@ ShotBitmap *grab_screenshot(ShotRegion *region)
     SelectObject(hdc, hbitmap);
 
     BitBlt(hdc, 0, 0, region->width, region->height,
-        hdc_screen, region->x, region->y, SRCCOPY);
+        hdc_screen, region->x, region->y, SRCCOPY | CAPTUREBLT);
 
     BITMAP bitmap;
     GetObject(hbitmap, sizeof(BITMAP), &bitmap);
