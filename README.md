@@ -4,6 +4,7 @@ shot
 Make screenshots with friendly CLI.
 
 Download for Windows: [*Github Releases*](https://github.com/rr-/shot/releases)
+Detailed usage: [*click*](https://raw.githubusercontent.com/rr-/shot/master/docs/help.txt)
 
 ### Features
 
