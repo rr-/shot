@@ -20,5 +20,6 @@ ShotBitmap *bitmap_create(unsigned int width, unsigned int height);
 void bitmap_destroy(ShotBitmap *bitmap);
 ShotPixel *bitmap_get_pixel(ShotBitmap *bitmap, unsigned int x, unsigned int y);
 int bitmap_save_to_png(ShotBitmap *bitmap, const char *path);
+int bitmap_save_to_clipboard(ShotBitmap *bitmap);
 
 #endif

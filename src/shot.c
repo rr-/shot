@@ -24,6 +24,7 @@
 struct ShotOptions
 {
     int status;
+    int clipboard;
     const char *output_path;
     ShotRegion region;
 };
@@ -84,6 +85,7 @@ static struct ShotOptions parse_options(
     assert(monitor_mgr->monitor_count);
 
     struct ShotOptions options = {
+        .clipboard = 0,
         .status = STATUS_CONTINUE,
         .output_path = NULL,
     };
@@ -92,11 +94,12 @@ static struct ShotOptions parse_options(
 
     int region_result = -1;
 
-    const char *short_opt = "ho:r:diw:Wvm:Ml";
+    const char *short_opt = "ho:r:diw:Wvm:Mlc";
     struct option long_opt[] = {
         {"list",           no_argument,       NULL, 'l'},
         {"help",           no_argument,       NULL, 'h'},
         {"output",         required_argument, NULL, 'o'},
+        {"clipboard",      no_argument,       NULL, 'c'},
         {"region",         required_argument, NULL, 'r'},
         {"monitor",        required_argument, NULL, 'm'},
         {"window",         required_argument, NULL, 'w'},
@@ -139,6 +142,10 @@ static struct ShotOptions parse_options(
             case 'l':
                 show_monitors(monitor_mgr);
                 options.status = STATUS_EXIT_NO_ERROR;
+                break;
+
+            case 'c':
+                options.clipboard = 1;
                 break;
 
             case 'o':
@@ -322,8 +329,11 @@ int main(int argc, char **argv)
         goto end;
     }
 
-    output_path = get_output_path(options.output_path);
-    assert(output_path);
+    if (!options.clipboard)
+    {
+        output_path = get_output_path(options.output_path);
+        assert(output_path);
+    }
 
     if (options.region.width <= 0 || options.region.height <= 0)
     {
@@ -334,8 +344,16 @@ int main(int argc, char **argv)
 
     bitmap = grab_screenshot(&options.region);
     assert(bitmap);
-    if (bitmap_save_to_png(bitmap, output_path))
-        goto end;
+    if (options.clipboard)
+    {
+        if (bitmap_save_to_clipboard(bitmap))
+            goto end;
+    }
+    else
+    {
+        if (bitmap_save_to_png(bitmap, output_path))
+            goto end;
+    }
     exit_code = 0;
 
 end:

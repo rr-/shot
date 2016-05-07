@@ -12,6 +12,8 @@ Basic options
                         default file name. Target directory needs to exist
                         prior to invocation.
                         Currently, only PNG format is supported.
+    -c, --clipboard     Puts the target image in the system clipboard.
+                        Overrides --output. Available only on Windows.
         --list          Lists all monitors and exits.
     -v, --version       Shows shot's version and exists.
 
