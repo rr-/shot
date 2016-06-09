@@ -43,6 +43,14 @@ endif()
 add_definitions(-D_POSIX_C_SOURCE=200809L) # needed for nanosleep()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --std=c99") # mxe is still at cmake 3.0.2, can't use CMAKE_C_STANDARD
 
+if(GDI32_FOUND)
+    set(target "WIN")
+elseif(X11_FOUND)
+    seT(target "X11")
+else()
+    message(FATAL_ERROR "Neither X11 or Windows detected")
+endif()
+
 # ------------
 # Source files
 # ------------
@@ -55,10 +63,10 @@ file(GLOB_RECURSE sources
     ${CMAKE_SOURCE_DIR}/src/*.h)
 
 foreach(path ${sources})
-    if ("${path}" MATCHES "_win\\." AND NOT GDI32_FOUND)
+    if("${path}" MATCHES "_win\\." AND NOT (target STREQUAL "WIN"))
         list(REMOVE_ITEM sources "${path}")
     endif()
-    if ("${path}" MATCHES "_x11\\." AND NOT X11_FOUND)
+    if("${path}" MATCHES "_x11\\." AND NOT (target STREQUAL "X11"))
         list(REMOVE_ITEM sources "${path}")
     endif()
 endforeach()
@@ -79,15 +87,13 @@ add_custom_target(uninstall COMMAND
 # Linking definitions
 # -------------------
 target_link_libraries(shot ${PNG_LIBRARIES})
-if(X11_FOUND)
+if(target STREQUAL "X11")
     if(NOT XRANDR_FOUND)
         message(FATAL_ERROR "XRandR not found")
     endif()
     target_link_libraries(shot ${X11_LIBRARIES})
     target_link_libraries(shot ${XRANDR_LIBRARIES})
-elseif(GDI32_FOUND)
+elseif(target STREQUAL "WIN")
     target_link_libraries(shot ${GDI32_LIBRARIES})
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mwindows") # disable console window
-else()
-    message(FATAL_ERROR "Neither X11 or Windows detected")
 endif()
