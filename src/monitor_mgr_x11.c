@@ -30,7 +30,7 @@ MonitorManager *monitor_mgr_create()
             display, screen, screen->outputs[i]);
         assert(output_info);
 
-        if (output_info->connection == RR_Connected)
+        if (output_info->connection == RR_Connected && output_info->crtc)
         {
             XRRCrtcInfo *crtc_info = XRRGetCrtcInfo(
                 display, screen, output_info->crtc);
