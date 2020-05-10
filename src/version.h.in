@@ -1,7 +1,0 @@
-#ifndef VERSION_H
-#define VERSION_H
-
-static const char *version_short = "@VERSION_SHORT@";
-static const char *version_long = "@VERSION_LONG@";
-
-#endif

@@ -1,6 +1,0 @@
-#ifndef HELP_H
-#define HELP_H
-
-static const char *help_str = "@HELP@";
-
-#endif

@@ -38,3 +38,10 @@ else(GDI32_FOUND)
     message(FATAL_ERROR "FindGDI32: Could not find gdi32 header file and/or library")
   endif(GDI32_FIND_REQUIRED)
 endif(GDI32_FOUND)
+
+if(GDI32_FOUND AND NOT TARGET GDI32::GDI32)
+  add_library(GDI32::GDI32 UNKNOWN IMPORTED)
+  set_target_properties(GDI32::GDI32 PROPERTIES
+    IMPORTED_LOCATION "${GDI32_LIBRARY}"
+    INTERFACE_COMPILE_OPTIONS -mwindows) # disable console window
+endif()
