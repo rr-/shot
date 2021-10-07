@@ -27,7 +27,7 @@ static BOOL CALLBACK callback(
 
 MonitorManager *monitor_mgr_create()
 {
-    MonitorManager *mgr = malloc(sizeof(MonitorManager*));
+    MonitorManager *mgr = malloc(sizeof(MonitorManager));
     mgr->monitor_count = 0;
     mgr->monitors = NULL;
 

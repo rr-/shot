@@ -14,7 +14,7 @@ MonitorManager *monitor_mgr_create()
         return NULL;
     }
 
-    MonitorManager *mgr = malloc(sizeof(MonitorManager*));
+    MonitorManager *mgr = malloc(sizeof(MonitorManager));
     mgr->monitor_count = 0;
     mgr->monitors = NULL;
 
