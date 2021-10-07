@@ -30,7 +30,7 @@ struct ShotOptions
 
 static void show_usage(void)
 {
-    printf(help_str);
+    printf("%s", help_str);
 }
 
 static void show_version(void)
