@@ -38,8 +38,8 @@ int bitmap_save_to_clipboard(ShotBitmap *bitmap)
     *((BITMAPINFOHEADER*)dest) = header;
     dest += sizeof(BITMAPINFOHEADER);
     ShotPixel *src = bitmap->pixels;
-    for (int y = 0; y < bitmap->height; y++)
-    for (int x = 0; x < bitmap->width; x++)
+    for (unsigned int y = 0; y < bitmap->height; y++)
+    for (unsigned int x = 0; x < bitmap->width; x++)
     {
         dest[y * stride + x * 3 + 0] = src->blue;
         dest[y * stride + x * 3 + 1] = src->green;
