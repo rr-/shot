@@ -2,3 +2,16 @@ waf
 build
 .lock*
 .waf*
+
+# auto-generated
+help.h
+
+# cmane
+CMakeFiles/
+CMakeCache.txt
+MakeFile
+cmake_install.cmake
+cmake_uninstall.cmake
+
+# Win
+*.exe
