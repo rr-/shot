@@ -87,6 +87,9 @@ endforeach()
 # -------------------
 target_link_libraries(shot PRIVATE PNG::PNG
     $<$<NOT:$<BOOL:${WIN32}>>:PkgConfig::X11>)
+if(WIN32)
+    set(CMAKE_C_CREATE_WIN32_EXE "-mconsole") # overwrite "-mwindows"
+endif()
 
 # ------------
 # Installation
