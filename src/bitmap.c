@@ -28,7 +28,7 @@ int bitmap_save_to_png(ShotBitmap *bitmap, const char *path)
 {
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
-    int ret = 1;
+    volatile int ret = 1;
 
     FILE *fp = fopen(path, "wb");
     if (!fp)
