@@ -85,7 +85,7 @@ static void draw_text(struct private *p)
 static LRESULT CALLBACK wnd_proc(
     HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    struct private *p = GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    struct private *p = (struct private *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (msg)
     {
