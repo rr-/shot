@@ -227,6 +227,7 @@ static void run_event_loop(struct private *p)
     {
         TranslateMessage(&Msg);
         DispatchMessage(&Msg);
+        Sleep(1);
     }
 }
 
