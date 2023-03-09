@@ -50,6 +50,7 @@ add_executable(shot WIN32 # disable console window on windows
     src/monitor_mgr_${target}.c
     src/region.h
     src/shot.c
+    src/window_${target}.c src/window.h
     src/region_picker/active_monitor.c src/region_picker/active_monitor.h
     src/region_picker/active_window_${target}.c
     src/region_picker/active_window.h

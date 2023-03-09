@@ -216,6 +216,7 @@ static int init_window(
     SetLayeredWindowAttributes(p->hwnd,  0, 0.5f * 255, LWA_ALPHA);
     SetWindowLongPtr(p->hwnd, GWLP_USERDATA, (long)p);
     ShowWindow(p->hwnd, SW_SHOWNORMAL);
+    SetForegroundWindow(p->hwnd); //focus
     UpdateWindow(p->hwnd);
     return 0;
 }

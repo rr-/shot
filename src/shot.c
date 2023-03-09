@@ -8,6 +8,7 @@
 #include "help.h"
 #include "monitor.h"
 #include "monitor_mgr.h"
+#include "window.h"
 #include "region_picker/active_monitor.h"
 #include "region_picker/active_window.h"
 #include "region_picker/errors.h"
@@ -194,6 +195,7 @@ static struct ShotOptions parse_options(
                 region_result = update_region_from_all_monitors(
                     &working_area, monitor_mgr);
                 assert(!region_result);
+                activate_window();
                 region_result = update_region_interactively(
                     &options.region, &working_area);
                 break;
@@ -308,6 +310,8 @@ int main(int argc, char **argv)
     int exit_code = 1;
 
     ShotBitmap *bitmap = NULL;
+
+    hide_window();
 
     MonitorManager *monitor_mgr = monitor_mgr_create();
     if (!monitor_mgr)
