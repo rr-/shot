@@ -2,25 +2,26 @@
 #include "window.h"
 
 static HWND hWnd = NULL;
-static BOOL bGUI = FALSE;
+static BOOL bUnattached = FALSE;
 
 void hide_window()
 {
     hWnd = GetConsoleWindow();
-    bGUI = GetWindowThreadProcessId(hWnd, NULL) == GetCurrentThreadId();
-    if (bGUI)
+    bUnattached = GetWindowThreadProcessId(hWnd, NULL) == GetCurrentThreadId();
+    if (bUnattached)
     {
-        ShowWindow(hWnd, SW_HIDE); //doesn't activate another window
-        ShowWindow(hWnd, SW_MINIMIZE); //activates another window
-        ShowWindow(hWnd, SW_HIDE);
+        //change it to GUI mode
+        FreeConsole();
+        //activates another window, while `SW_HIDE` doesn't
+        ShowWindow(hWnd, SW_MINIMIZE);
     }
 }
 
 void activate_window()
 {
-    if (bGUI && hWnd != NULL)
+    if (bUnattached && hWnd != NULL)
     {
-        ShowWindow(hWnd, SW_RESTORE); //required by SW_MINIMIZE
-        ShowWindow(hWnd, SW_HIDE);
+        //catch focus when process is launched in hidden mode
+        SetForegroundWindow(hWnd);
     }
 }
