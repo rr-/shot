@@ -50,6 +50,7 @@ add_executable(shot WIN32 # disable console window on windows
     src/monitor_mgr_${target}.c
     src/region.h
     src/shot.c
+    src/window_${target}.c src/window.h
     src/region_picker/active_monitor.c src/region_picker/active_monitor.h
     src/region_picker/active_window_${target}.c
     src/region_picker/active_window.h
@@ -87,6 +88,9 @@ endforeach()
 # -------------------
 target_link_libraries(shot PRIVATE PNG::PNG
     $<$<NOT:$<BOOL:${WIN32}>>:PkgConfig::X11>)
+if(WIN32)
+    set(CMAKE_C_CREATE_WIN32_EXE "-mconsole") # overwrite "-mwindows"
+endif()
 
 # ------------
 # Installation
